@@ -1,10 +1,14 @@
 package jpc;
 
-import jpc.data.Product;
+import jpc.data.Tuple;
 import jpc.parsers.*;
 import jpc.result.*;
+import jpc.result.Error;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -19,7 +23,7 @@ public interface Parser<T> {
     }
 
     public default Parser<List<T>> repeat1() {
-        return this.and(this.repeat()).map(product -> Stream.concat(Stream.of(product.first()), product.second().stream()).collect(Collectors.toList()));
+        return this.and(this.repeat()).map(tuple -> Stream.concat(Stream.of(tuple.first()), tuple.second().stream()).collect(Collectors.toList()));
     }
 
     public default <U> Parser<U> map(final Function<T, U> function) {
@@ -38,8 +42,80 @@ public interface Parser<T> {
         return this.flatMap(result -> parser.map(ignore -> result));
     }
 
-    public default <U> Parser<Product<T, U>> and(final Parser<U> parser) {
-        return this.flatMap(first -> parser.map(second -> new Product<>(first, second)));
+    public default <U> Parser<Tuple<T, U>> and(final Parser<U> parser) {
+        return this.flatMap(first -> parser.map(second -> new Tuple<>(first, second)));
+    }
+
+    public default Parser<Void> not() {
+        return ((input, offset) -> switch (apply(input, offset)) {
+            case Success<T> success -> new Error<>("unexpected '" + success.value + "'", offset);
+            case Failure<T> ignore -> new Success<>(null, offset);
+        });
+    }
+
+    public default Parser<Optional<T>> optional() {
+        return ((input, offset) -> switch(apply(input, offset)) {
+            case Success<T> success -> new Success<>(Optional.of(success.value), success.offset);
+            case Error<T> error -> new Success<>(Optional.empty(), error.offset);
+            case Abort<T> abort -> new Abort<>(abort.message, abort.offset);
+        });
+    }
+
+    public default <U> Parser<List<T>> separate(final Parser<U> separator) {
+        return separate1(separator).optional().map(optional -> optional.orElse(List.of()));
+    }
+
+    public default <U> Parser<List<T>> separate1(final Parser<U> separator) {
+        return this.and(separator.and(this).repeat())
+                .map(tuple -> Stream.concat(Stream.of(tuple.first()), tuple.second().stream().map(Tuple::second)).collect(Collectors.toList()));
+    }
+
+    public static <T> Parser<T> chainLeft(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
+        return element.and(separator.and(element).repeat()).map(tuple -> {
+            T result = tuple.first();
+
+            for (Tuple<BiFunction<T, T, T>, T> next : tuple.second()) {
+                result = next.first().apply(result, next.second());
+            }
+
+            return result;
+        });
+    }
+
+    public static <T> Parser<T> chainRight(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
+        return element.and(separator.and(element).repeat()).map(tuple -> {
+            if (tuple.second().isEmpty()) {
+                return tuple.first();
+            } else {
+                final List<Tuple<BiFunction<T, T, T>, T>> reversed = tuple.second().reversed();
+                final Iterator<Tuple<BiFunction<T, T, T>, T>> iterator = reversed.iterator();
+
+                final Tuple<BiFunction<T, T, T>, T> first = iterator.next();
+                T result = first.second();
+                BiFunction<T, T, T> combiner = first.first();
+
+                while (iterator.hasNext()) {
+                    final Tuple<BiFunction<T, T, T>, T> next = iterator.next();
+                    result = combiner.apply(next.second(), result);
+                    combiner = next.first();
+                }
+
+                result = combiner.apply(tuple.first(), result);
+                return result;
+            }
+        });
+    }
+
+    public static <T> Parser<T> success(final T value) {
+        return ((input, offset) -> new Success<>(value, offset));
+    }
+
+    public static <T> Parser<T> fail(final String message) {
+        return ((input, offset) -> new Error<>(message, offset));
+    }
+
+    public static <T> Parser<T> abort(final String message) {
+        return ((input, offset) -> new Abort<>(message, offset));
     }
 
     @SafeVarargs
