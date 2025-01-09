@@ -13,7 +13,7 @@ public abstract class ParserTest {
     public final <T> void assertSuccess(final Parser<T> parser, final T expected, String input) {
         switch (parser.apply(input, 0)) {
             case Success<T> success:
-                assertEquals(success.value, expected);
+                assertEquals(expected, success.value);
                 break;
 
             case Failure<T> failure:
@@ -29,7 +29,7 @@ public abstract class ParserTest {
                 break;
 
             case Failure<?> failure:
-                assertEquals(failure.message, message);
+                assertEquals(message, failure.message);
                 break;
         }
     }

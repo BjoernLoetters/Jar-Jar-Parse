@@ -1,5 +1,6 @@
 package jpc;
 
+import jpc.data.Product;
 import jpc.parsers.*;
 import jpc.result.*;
 
@@ -17,12 +18,28 @@ public interface Parser<T> {
         return new RepeatParser<>(this);
     }
 
+    public default Parser<List<T>> repeat1() {
+        return this.and(this.repeat()).map(product -> Stream.concat(Stream.of(product.first()), product.second().stream()).collect(Collectors.toList()));
+    }
+
     public default <U> Parser<U> map(final Function<T, U> function) {
         return new MapParser<>(this, function);
     }
 
     public default <U> Parser<U> flatMap(final Function<T, Parser<U>> function) {
         return new FlatMapParser<>(this, function);
+    }
+
+    public default <U> Parser<U> keepRight(final Parser<U> parser) {
+        return this.flatMap(ignore -> parser);
+    }
+
+    public default <U> Parser<T> keepLeft(final Parser<U> parser) {
+        return this.flatMap(result -> parser.map(ignore -> result));
+    }
+
+    public default <U> Parser<Product<T, U>> and(final Parser<U> parser) {
+        return this.flatMap(first -> parser.map(second -> new Product<>(first, second)));
     }
 
     @SafeVarargs
@@ -40,8 +57,8 @@ public interface Parser<T> {
     }
 
     @SafeVarargs
-    public static <T> Parser<List<T>> sequence(final Parser<? extends T> first, final Parser<? extends T> ... subsequent) {
-        final List<Parser<T>> sequence = Stream.concat(Stream.of(first), Stream.of(subsequent)).map(parser -> {
+    public static <T> Parser<List<T>> sequence(final Parser<? extends T> ... parsers) {
+        final List<Parser<T>> sequence = Stream.of(parsers).map(parser -> {
             @SuppressWarnings("unchecked")
             final Parser<T> up = (Parser<T>) parser;
             return up;

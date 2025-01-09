@@ -41,4 +41,36 @@ public final class StringTest extends ParserTest {
         assertSuccess(endParser, "abc", "abc");
     }
 
+    @Test
+    public void lowercaseSuccessTest() {
+        assertSuccess(lowercase, 'a', "abc");
+    }
+
+    @Test
+    public void uppercaseSuccessTest() {
+        assertSuccess(uppercase, 'A', "ABC");
+    }
+
+    @Test
+    public void lowercaseFailureTest() {
+        assertFailure(lowercase, "unexpected character 'A', expected regular expression '[a-z]'", "ABC");
+    }
+
+    @Test
+    public void uppercaseFailureTest() {
+        assertFailure(uppercase, "unexpected character 'a', expected regular expression '[A-Z]'", "abc");
+    }
+
+    @Test
+    public void characterSuccessTest() {
+        Parser<Character> parser = character('x');
+        assertSuccess(parser, 'x', "xyz");
+    }
+
+    @Test
+    public void characterFailureTest() {
+        Parser<Character> parser = character('x');
+        assertFailure(parser, "unexpected character 'y', expected literal 'x'", "yza");
+    }
+
 }
