@@ -1,8 +1,8 @@
 package jcombinators.common;
 
 import jcombinators.Parser;
-import jcombinators.parsers.LiteralParser;
-import jcombinators.parsers.RegexParser;
+import jcombinators.primitive.LiteralParser;
+import jcombinators.primitive.RegexParser;
 
 public final class StringParser {
 

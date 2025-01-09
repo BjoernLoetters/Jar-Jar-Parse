@@ -1,7 +1,7 @@
 package jcombinators;
 
 import jcombinators.data.Tuple;
-import jcombinators.parsers.*;
+import jcombinators.primitive.*;
 import jcombinators.result.*;
 import jcombinators.result.Error;
 
@@ -42,6 +42,14 @@ public interface Parser<T> {
         return this.flatMap(result -> parser.map(ignore -> result));
     }
 
+    public default Parser<T> commit() {
+        return ((input, offset) -> switch (apply(input, offset)) {
+            case Success<T> success -> success;
+            case Error<T> error -> new Abort<>(error.message, error.offset);
+            case Abort<T> abort -> abort;
+        });
+    }
+
     public default <U> Parser<Tuple<T, U>> and(final Parser<U> parser) {
         return this.flatMap(first -> parser.map(second -> new Tuple<>(first, second)));
     }
@@ -68,6 +76,10 @@ public interface Parser<T> {
     public default <U> Parser<List<T>> separate1(final Parser<U> separator) {
         return this.and(separator.and(this).repeat())
                 .map(tuple -> Stream.concat(Stream.of(tuple.first()), tuple.second().stream().map(Tuple::second)).collect(Collectors.toList()));
+    }
+
+    public default Parser<T> or(final Parser<T> alternative) {
+        return or(this, alternative);
     }
 
     public static <T> Parser<T> chainLeft(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {

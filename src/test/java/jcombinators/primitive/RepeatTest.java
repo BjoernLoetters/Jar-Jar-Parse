@@ -1,4 +1,4 @@
-package jcombinators.parsers;
+package jcombinators.primitive;
 
 import jcombinators.Parser;
 import jcombinators.ParserTest;

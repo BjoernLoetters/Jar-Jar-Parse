@@ -194,4 +194,28 @@ public final class CombinatorTest extends ParserTest {
         assertFailure(parser, "abort", "anything");
     }
 
+    @Test
+    public void commitSuccessTest() {
+        Parser<Character> parser = character('a').commit();
+        assertSuccess(parser, 'a', "a");
+    }
+
+    @Test
+    public void commitFailureTest() {
+        Parser<Character> parser = character('a').commit();
+        assertFailure(parser, "unexpected character 'b', expected literal 'a'", "b");
+    }
+
+    @Test
+    public void commitChainedParserTest() {
+        Parser<Tuple<Character, Character>> parser = character('a').commit().and(character('b'));
+        assertSuccess(parser, new Tuple<>('a', 'b'), "ab");
+    }
+
+    @Test
+    public void commitChoiceNoBacktrackingTest() {
+        Parser<Character> parser = character('a').commit().or(character('b'));
+        assertFailure(parser, "unexpected character 'b', expected literal 'a'", "b");
+    }
+
 }
