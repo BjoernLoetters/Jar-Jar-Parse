@@ -9,6 +9,9 @@ jobs:
   release:
     runs-on: ubuntu-latest
 
+    permissions:
+        contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -32,7 +35,6 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           draft: false
           prerelease: false
-          automatic_release_tag: latest
           title: "Release ${{ github.ref_name }}"
           files: |
             LICENSE
