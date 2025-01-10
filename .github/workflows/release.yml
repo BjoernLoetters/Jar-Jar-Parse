@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Unit Test
+        run: mvn clean test
+
+      - name: Build JAR-File
+        run: mvn clean package -DskipTests
+
+      - name: Upload Release
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          title: "Release ${{ github.ref_name }}"
+          tag: ${{ github.ref_name }}
+          files: |
+            target/*.jar
+          draft: false
+          prerelease: false
