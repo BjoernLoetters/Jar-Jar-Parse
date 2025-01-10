@@ -1,7 +1,12 @@
 package jcombinators.primitive;
 
 import jcombinators.Parser;
+import jcombinators.description.Description;
+import jcombinators.description.Literal;
+import jcombinators.description.Regex;
+import jcombinators.input.Input;
 import jcombinators.result.Error;
+import jcombinators.result.Failure;
 import jcombinators.result.Result;
 import jcombinators.result.Success;
 
@@ -21,15 +26,18 @@ public final class RegexParser implements Parser<String> {
     }
 
     @Override
-    public final Result<String> apply(final String input, final int offset) {
+    public final Description description() {
+        return new Regex(pattern);
+    }
+
+    @Override
+    public final Result<String> apply(final Input input) {
         final Matcher matcher = pattern.matcher(input);
-        if (matcher.region(offset, input.length()).lookingAt()) {
+        if (matcher.lookingAt()) {
             final String value = matcher.group();
-            return new Success<>(value, offset + value.length());
-        } else if (offset >= input.length()) {
-            return new Error<>("unexpected end of input, expected regular expression '" + pattern.pattern() + "'", offset);
+            return new Success<>(value, input.subSequence(value.length()));
         } else {
-            return new Error<>("unexpected character '" + input.charAt(offset) + "', expected regular expression '" + pattern.pattern() + "'", offset);
+            return new Error<>(Failure.format(input, description()), input);
         }
     }
 

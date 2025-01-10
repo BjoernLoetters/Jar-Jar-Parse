@@ -18,17 +18,17 @@ public final class FlatMapTest extends ParserTest {
 
     @Test
     public void flatMapFailureOuterTest() {
-        assertFailure(lengthParser, "unexpected character '1', expected literal 'hello'", "123");
+        assertFailure(lengthParser, "unexpected character '1', expected the literal 'hello'", "123");
     }
 
     @Test
     public void flatMapFailureInnerTest() {
-        assertFailure(lengthParser, "unexpected character ' ', expected literal 'hello'", "hello 123");
+        assertFailure(lengthParser, "unexpected character ' ', expected the literal 'hello'", "hello 123");
     }
 
     @Test
     public void flatMapEmptyInputTest() {
-        assertFailure(lengthParser, "unexpected end of input, expected literal 'hello'", "");
+        assertFailure(lengthParser, "unexpected end of input, expected the literal 'hello'", "");
     }
 
 }

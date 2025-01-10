@@ -1,14 +1,16 @@
 package jcombinators.result;
 
+import jcombinators.input.Input;
+
 import java.util.Optional;
 import java.util.function.Function;
 
 public sealed abstract class Result<T> permits Failure, Success {
 
-    public final int offset;
+    public final Input rest;
 
-    public Result(final int offset) {
-        this.offset = offset;
+    public Result(final Input rest) {
+        this.rest = rest;
     }
 
     public abstract Optional<T> get();

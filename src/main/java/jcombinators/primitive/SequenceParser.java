@@ -1,6 +1,9 @@
 package jcombinators.primitive;
 
 import jcombinators.Parser;
+import jcombinators.description.Description;
+import jcombinators.description.Unknown;
+import jcombinators.input.Input;
 import jcombinators.result.Failure;
 import jcombinators.result.Result;
 import jcombinators.result.Success;
@@ -18,15 +21,20 @@ public final class SequenceParser<T> implements Parser<List<T>> {
     }
 
     @Override
-    public final Result<List<T>> apply(final String input, final int offset) {
+    public final Description description() {
+        return new Unknown();
+    }
+
+    @Override
+    public final Result<List<T>> apply(final Input input) {
         final List<T> sequence = new ArrayList<>();
-        int current = offset;
+        Input current = input;
 
         for (final Parser<T> parser: parsers) {
-            switch (parser.apply(input, current)) {
+            switch (parser.apply(current)) {
                 case Success<T> success:
                     sequence.add(success.value);
-                    current = success.offset;
+                    current = success.rest;
                     continue;
 
                 case Failure<T> failure:

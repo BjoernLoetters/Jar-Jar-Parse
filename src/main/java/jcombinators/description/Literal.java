@@ -1,0 +1,301 @@
+package jcombinators.description;
+
+import java.util.Optional;
+
+public final class Literal extends Description {
+
+    public final String literal;
+
+    public Literal(final String literal) {
+        this.literal = literal == null ? "" : literal.trim();
+    }
+
+    @Override
+    public final Optional<String> describe() {
+        if (literal.isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(String.format("the literal '%s'", literal));
+        }
+    }
+
+    public static boolean isVowel(final char character) {
+        // Gratefully taken from https://stackoverflow.com/questions/26557604/whats-the-best-way-to-check-if-a-character-is-a-vowel-in-java
+        switch (character) {
+            case 65:
+            case 69:
+            case 73:
+            case 79:
+            case 85:
+            case 89:
+            case 97:
+            case 101:
+            case 105:
+            case 111:
+            case 117:
+            case 121:
+            case 192:
+            case 193:
+            case 194:
+            case 195:
+            case 196:
+            case 197:
+            case 198:
+            case 200:
+            case 201:
+            case 202:
+            case 203:
+            case 204:
+            case 205:
+            case 206:
+            case 207:
+            case 210:
+            case 211:
+            case 212:
+            case 213:
+            case 214:
+            case 216:
+            case 217:
+            case 218:
+            case 219:
+            case 220:
+            case 221:
+            case 224:
+            case 225:
+            case 226:
+            case 227:
+            case 228:
+            case 229:
+            case 230:
+            case 232:
+            case 233:
+            case 234:
+            case 235:
+            case 236:
+            case 237:
+            case 238:
+            case 239:
+            case 242:
+            case 243:
+            case 244:
+            case 245:
+            case 246:
+            case 248:
+            case 249:
+            case 250:
+            case 251:
+            case 252:
+            case 253:
+            case 255:
+            case 256:
+            case 257:
+            case 258:
+            case 259:
+            case 260:
+            case 261:
+            case 274:
+            case 275:
+            case 276:
+            case 277:
+            case 278:
+            case 279:
+            case 280:
+            case 281:
+            case 282:
+            case 283:
+            case 296:
+            case 297:
+            case 298:
+            case 299:
+            case 300:
+            case 301:
+            case 302:
+            case 303:
+            case 304:
+            case 305:
+            case 306:
+            case 307:
+            case 332:
+            case 333:
+            case 334:
+            case 335:
+            case 336:
+            case 337:
+            case 338:
+            case 339:
+            case 360:
+            case 361:
+            case 362:
+            case 363:
+            case 364:
+            case 365:
+            case 366:
+            case 367:
+            case 368:
+            case 369:
+            case 370:
+            case 371:
+            case 374:
+            case 375:
+            case 376:
+            case 506:
+            case 507:
+            case 508:
+            case 509:
+            case 510:
+            case 511:
+            case 512:
+            case 513:
+            case 514:
+            case 515:
+            case 516:
+            case 517:
+            case 518:
+            case 519:
+            case 520:
+            case 521:
+            case 522:
+            case 523:
+            case 524:
+            case 525:
+            case 526:
+            case 527:
+            case 532:
+            case 533:
+            case 534:
+            case 535:
+                return true;
+            default:
+                switch (character) {
+                    case 7680:
+                    case 7681:
+                    case 7700:
+                    case 7701:
+                    case 7702:
+                    case 7703:
+                    case 7704:
+                    case 7705:
+                    case 7706:
+                    case 7707:
+                    case 7708:
+                    case 7709:
+                    case 7724:
+                    case 7725:
+                    case 7726:
+                    case 7727:
+                    case 7756:
+                    case 7757:
+                    case 7758:
+                    case 7759:
+                    case 7760:
+                    case 7761:
+                    case 7762:
+                    case 7763:
+                    case 7794:
+                    case 7795:
+                    case 7796:
+                    case 7797:
+                    case 7798:
+                    case 7799:
+                    case 7800:
+                    case 7801:
+                    case 7802:
+                    case 7803:
+                    case 7833:
+                    case 7840:
+                    case 7841:
+                    case 7842:
+                    case 7843:
+                    case 7844:
+                    case 7845:
+                    case 7846:
+                    case 7847:
+                    case 7848:
+                    case 7849:
+                    case 7850:
+                    case 7851:
+                    case 7852:
+                    case 7853:
+                    case 7854:
+                    case 7855:
+                    case 7856:
+                    case 7857:
+                    case 7858:
+                    case 7859:
+                    case 7860:
+                    case 7861:
+                    case 7862:
+                    case 7863:
+                    case 7864:
+                    case 7865:
+                    case 7866:
+                    case 7867:
+                    case 7868:
+                    case 7869:
+                    case 7870:
+                    case 7871:
+                    case 7872:
+                    case 7873:
+                    case 7874:
+                    case 7875:
+                    case 7876:
+                    case 7877:
+                    case 7878:
+                    case 7879:
+                    case 7880:
+                    case 7881:
+                    case 7882:
+                    case 7883:
+                    case 7884:
+                    case 7885:
+                    case 7886:
+                    case 7887:
+                    case 7888:
+                    case 7889:
+                    case 7890:
+                    case 7891:
+                    case 7892:
+                    case 7893:
+                    case 7894:
+                    case 7895:
+                    case 7896:
+                    case 7897:
+                    case 7898:
+                    case 7899:
+                    case 7900:
+                    case 7901:
+                    case 7902:
+                    case 7903:
+                    case 7904:
+                    case 7905:
+                    case 7906:
+                    case 7907:
+                    case 7908:
+                    case 7909:
+                    case 7910:
+                    case 7911:
+                    case 7912:
+                    case 7913:
+                    case 7914:
+                    case 7915:
+                    case 7916:
+                    case 7917:
+                    case 7918:
+                    case 7919:
+                    case 7920:
+                    case 7921:
+                    case 7922:
+                    case 7923:
+                    case 7924:
+                    case 7925:
+                    case 7926:
+                    case 7927:
+                    case 7928:
+                    case 7929:
+                        return true;
+                }
+        }
+        return false;
+    }
+
+}

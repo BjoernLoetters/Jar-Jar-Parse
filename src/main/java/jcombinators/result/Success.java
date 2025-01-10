@@ -1,5 +1,7 @@
 package jcombinators.result;
 
+import jcombinators.input.Input;
+
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -7,8 +9,8 @@ public final class Success<T> extends Result<T> {
 
     public final T value;
 
-    public Success(final T value, final int offset) {
-        super(offset);
+    public Success(final T value, final Input rest) {
+        super(rest);
         this.value = value;
     }
 
@@ -29,7 +31,7 @@ public final class Success<T> extends Result<T> {
 
     @Override
     public final <U> Result<U> map(final Function<T, U> function) {
-        return new Success<>(function.apply(value), offset);
+        return new Success<>(function.apply(value), rest);
     }
 
     @Override

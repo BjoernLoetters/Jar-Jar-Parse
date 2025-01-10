@@ -1,6 +1,8 @@
 package jcombinators.primitive;
 
 import jcombinators.Parser;
+import jcombinators.description.Description;
+import jcombinators.input.Input;
 import jcombinators.result.Failure;
 import jcombinators.result.Result;
 import jcombinators.result.Success;
@@ -19,9 +21,14 @@ public final class MapParser<A, B> implements Parser<B> {
     }
 
     @Override
-    public final Result<B> apply(final String input, final int offset) {
-        return switch (parser.apply(input, offset)) {
-            case Success<A> success -> new Success<>(function.apply(success.value), success.offset);
+    public Description description() {
+        return parser.description();
+    }
+
+    @Override
+    public final Result<B> apply(final Input input) {
+        return switch (parser.apply(input)) {
+            case Success<A> success -> new Success<>(function.apply(success.value), success.rest);
             case Failure<A> failure -> {
                 @SuppressWarnings("unchecked")
                 final Failure<B> result = (Failure<B>) failure;

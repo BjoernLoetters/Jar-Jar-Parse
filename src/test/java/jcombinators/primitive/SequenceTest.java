@@ -24,12 +24,12 @@ public class SequenceTest extends ParserTest {
 
     @Test
     public void sequencePartialFailureTest() {
-        assertFailure(parser, "unexpected character 'x', expected literal 'c'", "abx");
+        assertFailure(parser, "unexpected character 'x', expected the literal 'c'", "abx");
     }
 
     @Test
     public void sequenceEmptyInputTest() {
-        assertFailure(parser, "unexpected end of input, expected literal 'a'", "");
+        assertFailure(parser, "unexpected end of input, expected the literal 'a'", "");
     }
 
     @Test

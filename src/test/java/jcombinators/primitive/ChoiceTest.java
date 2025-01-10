@@ -5,6 +5,7 @@ import jcombinators.ParserTest;
 import jcombinators.result.Abort;
 import org.junit.Test;
 
+import static jcombinators.Parser.abort;
 import static jcombinators.Parser.or;
 import static jcombinators.common.StringParser.regex;
 
@@ -26,12 +27,12 @@ public final class ChoiceTest extends ParserTest {
 
     @Test
     public void failChoiceTest() {
-        assertFailure(parser, "unexpected character '@', expected regular expression '[a-z]'", "@");
+        assertFailure(parser, "unexpected character '@', expected an input that matches '([0-9])|([a-z])'", "@");
     }
 
     @Test
     public void failChoiceWithoutBacktrackingTest() {
-        final Parser<Integer> first = (input, offset) -> new Abort<>("fatal error", 0);
+        final Parser<Integer> first = abort("fatal error");
         final ChoiceParser<Integer> parser = new ChoiceParser<>(first, second);
 
         assertFailure(parser, "fatal error", "a");
@@ -39,7 +40,7 @@ public final class ChoiceTest extends ParserTest {
 
     @Test
     public void emptyChoiceTest() {
-        assertFailure(parser, "unexpected end of input, expected regular expression '[a-z]'", "");
+        assertFailure(parser, "unexpected end of input, expected an input that matches '([0-9])|([a-z])'", "");
     }
 
 }

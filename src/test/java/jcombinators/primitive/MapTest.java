@@ -18,12 +18,12 @@ public final class MapTest extends ParserTest {
 
     @Test
     public void mapFailureTest() {
-        assertFailure(lengthParser, "unexpected character '1', expected regular expression '[a-z]+'", "123");
+        assertFailure(lengthParser, "unexpected character '1', expected an input that matches '[a-z]+'", "123");
     }
 
     @Test
     public void mapEmptyInputTest() {
-        assertFailure(lengthParser, "unexpected end of input, expected regular expression '[a-z]+'", "");
+        assertFailure(lengthParser, "unexpected end of input, expected an input that matches '[a-z]+'", "");
     }
 
     @Test

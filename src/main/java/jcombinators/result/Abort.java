@@ -1,11 +1,15 @@
 package jcombinators.result;
 
+import jcombinators.description.Description;
+import jcombinators.input.Input;
+
+import java.util.Set;
 import java.util.function.Function;
 
 public final class Abort<T> extends Failure<T> {
 
-    public Abort(final String message, final int offset) {
-        super(message, offset);
+    public Abort(final String message, final Input rest) {
+        super(message, rest);
     }
 
     @Override

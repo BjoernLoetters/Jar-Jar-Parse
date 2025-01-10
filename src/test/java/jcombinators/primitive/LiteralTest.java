@@ -15,17 +15,17 @@ public final class LiteralTest extends ParserTest {
 
     @Test
     public void literalFailureUnexpectedCharacterTest() {
-        assertFailure(parser, "unexpected character 'w', expected literal 'hello'", "world");
+        assertFailure(parser, "unexpected character 'w', expected the literal 'hello'", "world");
     }
 
     @Test
     public void literalFailureEndOfInputTest() {
-        assertFailure(parser, "unexpected end of input, expected literal 'hello'", "");
+        assertFailure(parser, "unexpected end of input, expected the literal 'hello'", "");
     }
 
     @Test
     public void literalPartialMatchFailureTest() {
-        assertFailure(parser, "unexpected character ' ', expected literal 'hello'", "hel world");
+        assertFailure(parser, "unexpected character ' ', expected the literal 'hello'", "hel world");
     }
 
     @Test
@@ -35,7 +35,7 @@ public final class LiteralTest extends ParserTest {
 
     @Test
     public void literalCaseSensitiveTest() {
-        assertFailure(parser, "unexpected character 'H', expected literal 'hello'", "Hello");
+        assertFailure(parser, "unexpected character 'H', expected the literal 'hello'", "Hello");
     }
 
     @Test
@@ -44,8 +44,8 @@ public final class LiteralTest extends ParserTest {
         final Parser<String> unicodeParser = new LiteralParser(unicodeLiteral);
 
         assertSuccess(unicodeParser, "😀", "😀");
-        assertFailure(unicodeParser, "unexpected character '🙂', expected literal '😀'", "🙂");
-        assertFailure(unicodeParser, "unexpected end of input, expected literal '😀'", "");
+        assertFailure(unicodeParser, "unexpected character '🙂', expected the literal '😀'", "🙂");
+        assertFailure(unicodeParser, "unexpected end of input, expected the literal '😀'", "");
     }
 
 }

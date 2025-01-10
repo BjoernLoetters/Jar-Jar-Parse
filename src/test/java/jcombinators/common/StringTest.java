@@ -19,8 +19,8 @@ public final class StringTest extends ParserTest {
     public void regexPrefixMatchTest() {
         Parser<String> wordParser = regex("abc");
         assertSuccess(wordParser, "abc", "abc_hello_world");
-        assertFailure(wordParser, "unexpected character 'd', expected regular expression 'abc'", "dabc");
-        assertFailure(wordParser, "unexpected character 'a', expected regular expression 'abc'", "aabc");
+        assertFailure(wordParser, "unexpected character 'd', expected an input that matches 'abc'", "dabc");
+        assertFailure(wordParser, "unexpected character 'a', expected an input that matches 'abc'", "aabc");
     }
 
     @Test
@@ -53,12 +53,12 @@ public final class StringTest extends ParserTest {
 
     @Test
     public void lowercaseFailureTest() {
-        assertFailure(lowercase, "unexpected character 'A', expected regular expression '[a-z]'", "ABC");
+        assertFailure(lowercase, "unexpected character 'A', expected an input that matches '[a-z]'", "ABC");
     }
 
     @Test
     public void uppercaseFailureTest() {
-        assertFailure(uppercase, "unexpected character 'a', expected regular expression '[A-Z]'", "abc");
+        assertFailure(uppercase, "unexpected character 'a', expected an input that matches '[A-Z]'", "abc");
     }
 
     @Test
@@ -70,7 +70,7 @@ public final class StringTest extends ParserTest {
     @Test
     public void characterFailureTest() {
         Parser<Character> parser = character('x');
-        assertFailure(parser, "unexpected character 'y', expected literal 'x'", "yza");
+        assertFailure(parser, "unexpected character 'y', expected the literal 'x'", "yza");
     }
 
 }

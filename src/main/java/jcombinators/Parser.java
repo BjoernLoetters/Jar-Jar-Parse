@@ -1,6 +1,10 @@
 package jcombinators;
 
 import jcombinators.data.Tuple;
+import jcombinators.description.Description;
+import jcombinators.description.Negation;
+import jcombinators.description.Unknown;
+import jcombinators.input.Input;
 import jcombinators.primitive.*;
 import jcombinators.result.*;
 import jcombinators.result.Error;
@@ -8,6 +12,7 @@ import jcombinators.result.Error;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -16,7 +21,11 @@ import java.util.stream.Stream;
 @FunctionalInterface
 public interface Parser<T> {
 
-    public abstract Result<T> apply(final String input, final int offset);
+    public abstract Result<T> apply(final Input input);
+
+    public default Description description() {
+        return new Unknown();
+    }
 
     public default Parser<List<T>> repeat() {
         return new RepeatParser<>(this);
@@ -43,9 +52,9 @@ public interface Parser<T> {
     }
 
     public default Parser<T> commit() {
-        return ((input, offset) -> switch (apply(input, offset)) {
+        return (input -> switch (apply(input)) {
             case Success<T> success -> success;
-            case Error<T> error -> new Abort<>(error.message, error.offset);
+            case Error<T> error -> new Abort<>(error.message, error.rest);
             case Abort<T> abort -> abort;
         });
     }
@@ -55,17 +64,21 @@ public interface Parser<T> {
     }
 
     public default Parser<Void> not() {
-        return ((input, offset) -> switch (apply(input, offset)) {
-            case Success<T> success -> new Error<>("unexpected '" + success.value + "'", offset);
-            case Failure<T> ignore -> new Success<>(null, offset);
+        return (input -> switch (apply(input)) {
+            case Success<T> success -> new Error<>(Failure.format(input, new Negation(this.description())), input);
+            case Failure<T> ignore -> new Success<>(null, input);
         });
     }
 
     public default Parser<Optional<T>> optional() {
-        return ((input, offset) -> switch(apply(input, offset)) {
-            case Success<T> success -> new Success<>(Optional.of(success.value), success.offset);
-            case Error<T> error -> new Success<>(Optional.empty(), error.offset);
-            case Abort<T> abort -> new Abort<>(abort.message, abort.offset);
+        return (input -> switch(apply(input)) {
+            case Success<T> success -> new Success<>(Optional.of(success.value), success.rest);
+            case Error<T> error -> new Success<>(Optional.empty(), error.rest);
+            case Abort<T> abort -> {
+                @SuppressWarnings("unchecked")
+                final Abort<Optional<T>> result = (Abort<Optional<T>>) abort;
+                yield result;
+            }
         });
     }
 
@@ -119,15 +132,15 @@ public interface Parser<T> {
     }
 
     public static <T> Parser<T> success(final T value) {
-        return ((input, offset) -> new Success<>(value, offset));
+        return (input -> new Success<>(value, input));
     }
 
     public static <T> Parser<T> fail(final String message) {
-        return ((input, offset) -> new Error<>(message, offset));
+        return (input -> new Error<>(message, input));
     }
 
     public static <T> Parser<T> abort(final String message) {
-        return ((input, offset) -> new Abort<>(message, offset));
+        return (input -> new Abort<>(message, input));
     }
 
     @SafeVarargs

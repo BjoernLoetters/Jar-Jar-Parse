@@ -1,6 +1,8 @@
 package jcombinators.primitive;
 
 import jcombinators.Parser;
+import jcombinators.description.Description;
+import jcombinators.input.Input;
 import jcombinators.result.Failure;
 import jcombinators.result.Result;
 import jcombinators.result.Success;
@@ -19,9 +21,14 @@ public final class FlatMapParser<T, U> implements Parser<U> {
     }
 
     @Override
-    public final Result<U> apply(final String input, final int offset) {
-        return switch (parser.apply(input, offset)) {
-            case Success<T> success -> function.apply(success.value).apply(input, success.offset);
+    public final Description description() {
+        return parser.description();
+    }
+
+    @Override
+    public final Result<U> apply(final Input input) {
+        return switch (parser.apply(input)) {
+            case Success<T> success -> function.apply(success.value).apply(success.rest);
             case Failure<T> failure -> {
                 @SuppressWarnings("unchecked")
                 final Failure<U> result = (Failure<U>) failure;

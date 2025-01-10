@@ -1,6 +1,7 @@
 package jcombinators.primitive;
 
 import jcombinators.Parser;
+import jcombinators.input.Input;
 import jcombinators.result.Failure;
 import jcombinators.result.Result;
 import jcombinators.result.Success;
@@ -18,16 +19,16 @@ public final class RepeatParser<T> implements Parser<List<T>> {
     }
 
     @Override
-    public final Result<List<T>> apply(final String input, final int offset) {
+    public final Result<List<T>> apply(final Input input) {
         final List<T> values = new ArrayList<>();
-        int current = offset;
+        Input current = input;
         boolean stop = false;
 
         do {
-            switch (parser.apply(input, current)) {
+            switch (parser.apply(current)) {
                 case Success<T> success:
                     values.add(success.value);
-                    current = success.offset;
+                    current = success.rest;
                     break;
                 case Failure<T> ignore:
                     stop = true;

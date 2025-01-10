@@ -1,7 +1,11 @@
 package jcombinators.primitive;
 
 import jcombinators.Parser;
+import jcombinators.description.Description;
+import jcombinators.description.Literal;
+import jcombinators.input.Input;
 import jcombinators.result.Error;
+import jcombinators.result.Failure;
 import jcombinators.result.Result;
 import jcombinators.result.Success;
 
@@ -14,13 +18,18 @@ public final class LiteralParser implements Parser<String> {
     }
 
     @Override
-    public final Result<String> apply(final String input, final int offset) {
+    public final Description description() {
+        return new Literal(literal);
+    }
+
+    @Override
+    public final Result<String> apply(final Input input) {
         final int inputLength = input.length();
         final int prefixLength = literal.length();
         int i = 0;
 
-        while ((offset + i) < inputLength && i < prefixLength) {
-            final int a = input.codePointAt(offset + i);
+        while (i < inputLength && i < prefixLength) {
+            final int a = input.codePointAt(i);
             final int b = literal.codePointAt(i);
 
             if (a != b) {
@@ -30,13 +39,10 @@ public final class LiteralParser implements Parser<String> {
             i += Character.charCount(a);
         }
 
-        if (i >= prefixLength) {
-            return new Success<>(literal, offset + literal.length());
-        } else if (offset + i >= input.length()) {
-            return new Error<>("unexpected end of input, expected literal '" + literal + "'", offset);
+        if (i == prefixLength) {
+            return new Success<>(literal, input.subSequence(i));
         } else {
-            final String cp = input.substring(offset + i, offset + i + Character.charCount(input.codePointAt(offset + i)));
-            return new Error<>("unexpected character '" + cp + "', expected literal '" + literal + "'", offset);
+            return new Error<>(Failure.format(input.subSequence(i), description()), input);
         }
     }
 
