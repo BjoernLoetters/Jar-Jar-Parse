@@ -30,9 +30,10 @@ jobs:
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          title: "Release ${{ github.ref_name }}"
-          tag: ${{ github.ref_name }}
-          files: |
-            target/*.jar
           draft: false
           prerelease: false
+          automatic_release_tag: latest
+          title: "Release ${{ github.ref_name }}"
+          files: |
+            LICENSE
+            target/*.jar
