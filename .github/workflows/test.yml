@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: Unit Test
 
 on:
   push:
