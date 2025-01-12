@@ -46,7 +46,7 @@ public final class CombinatorTest extends ParserTest {
     public void keepRightSuccessTest() {
         Parser<Character> first = character('a');
         Parser<Character> second = character('b');
-        Parser<Character> parser = first.keepRight(second);
+        Parser<Character> parser = first.andr(second);
 
         assertSuccess(parser, 'b', "ab");
     }
@@ -55,7 +55,7 @@ public final class CombinatorTest extends ParserTest {
     public void keepRightFailureTest() {
         Parser<Character> first = character('a');
         Parser<Character> second = character('b');
-        Parser<Character> parser = first.keepRight(second);
+        Parser<Character> parser = first.andr(second);
 
         assertFailure(parser, "unexpected character 'c', expected the literal 'b'", "ac");
     }
@@ -64,7 +64,7 @@ public final class CombinatorTest extends ParserTest {
     public void keepLeftSuccessTest() {
         Parser<Character> first = character('a');
         Parser<Character> second = character('b');
-        Parser<Character> parser = first.keepLeft(second);
+        Parser<Character> parser = first.andl(second);
 
         assertSuccess(parser, 'a', "ab");
     }
@@ -73,7 +73,7 @@ public final class CombinatorTest extends ParserTest {
     public void keepLeftFailureTest() {
         Parser<Character> first = character('a');
         Parser<Character> second = character('b');
-        Parser<Character> parser = first.keepLeft(second);
+        Parser<Character> parser = first.andl(second);
 
         assertFailure(parser, "unexpected character 'c', expected the literal 'b'", "ac");
     }
@@ -162,7 +162,7 @@ public final class CombinatorTest extends ParserTest {
     public void chainLeftSuccessTest() {
         final Parser<Integer> number = regex("[0-9]").map(Integer::parseInt);
         final Parser<BiFunction<Integer, Integer, Integer>> plus = character('+').map(op -> Integer::sum);
-        final Parser<Integer> parser = Parser.chainLeft(number, plus);
+        final Parser<Integer> parser = Parser.chainl(number, plus);
 
         assertSuccess(parser, 6, "1+2+3");
     }
@@ -171,7 +171,7 @@ public final class CombinatorTest extends ParserTest {
     public void chainRightSuccessTest() {
         final Parser<Integer> number = regex("[0-9]").map(Integer::parseInt);
         final Parser<BiFunction<Integer, Integer, Integer>> exponent = character('^').map(op -> (a, b) -> (int) Math.pow(a, b));
-        final Parser<Integer> parser = Parser.chainRight(number, exponent);
+        final Parser<Integer> parser = Parser.chainr(number, exponent);
 
         assertSuccess(parser, 2, "2^3^0");
     }

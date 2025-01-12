@@ -12,14 +12,13 @@ import jcombinators.result.Error;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @FunctionalInterface
-public interface Parser<T> {
+public interface Parser<T> extends Function<Input, Result<T>> {
 
     public abstract Result<T> apply(final Input input);
 
@@ -43,12 +42,16 @@ public interface Parser<T> {
         return new FlatMapParser<>(this, function);
     }
 
-    public default <U> Parser<U> keepRight(final Parser<U> parser) {
+    public default <U> Parser<U> andr(final Parser<U> parser) {
         return this.flatMap(ignore -> parser);
     }
 
-    public default <U> Parser<T> keepLeft(final Parser<U> parser) {
+    public default <U> Parser<T> andl(final Parser<U> parser) {
         return this.flatMap(result -> parser.map(ignore -> result));
+    }
+
+    public default <U> Parser<Tuple<T, U>> and(final Parser<U> parser) {
+        return this.flatMap(first -> parser.map(second -> new Tuple<>(first, second)));
     }
 
     public default Parser<T> commit() {
@@ -57,10 +60,6 @@ public interface Parser<T> {
             case Error<T> error -> new Abort<>(error.message, error.rest);
             case Abort<T> abort -> abort;
         });
-    }
-
-    public default <U> Parser<Tuple<T, U>> and(final Parser<U> parser) {
-        return this.flatMap(first -> parser.map(second -> new Tuple<>(first, second)));
     }
 
     public default Parser<Void> not() {
@@ -95,7 +94,7 @@ public interface Parser<T> {
         return or(this, alternative);
     }
 
-    public static <T> Parser<T> chainLeft(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
+    public static <T> Parser<T> chainl(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
         return element.and(separator.and(element).repeat()).map(tuple -> {
             T result = tuple.first();
 
@@ -107,7 +106,7 @@ public interface Parser<T> {
         });
     }
 
-    public static <T> Parser<T> chainRight(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
+    public static <T> Parser<T> chainr(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
         return element.and(separator.and(element).repeat()).map(tuple -> {
             if (tuple.second().isEmpty()) {
                 return tuple.first();

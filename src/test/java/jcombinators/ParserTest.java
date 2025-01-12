@@ -3,12 +3,9 @@ package jcombinators;
 import jcombinators.input.Input;
 import jcombinators.result.Failure;
 import jcombinators.result.Success;
-import jdk.jfr.StackTrace;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
