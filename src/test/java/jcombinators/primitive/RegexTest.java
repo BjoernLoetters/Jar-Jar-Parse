@@ -21,13 +21,13 @@ public class RegexTest extends ParserTest {
     @Test
     public void regexNoMatchTest() {
         final Parser<String> parser = new RegexParser("[a-z]+");
-        assertFailure(parser, "unexpected character '1', expected an input that matches '[a-z]+'", "123");
+        assertFailure(parser, "syntax error in Test 'regexNoMatchTest' at line 1 and character 1: unexpected character '1', expected an input that matches '[a-z]+'", "123");
     }
 
     @Test
     public void regexEmptyInputTest() {
         final Parser<String> parser = new RegexParser("[a-z]+");
-        assertFailure(parser, "unexpected end of input, expected an input that matches '[a-z]+'", "");
+        assertFailure(parser, "syntax error in Test 'regexEmptyInputTest' at line 1 and character 1: unexpected end of input, expected an input that matches '[a-z]+'", "");
     }
 
     @Test

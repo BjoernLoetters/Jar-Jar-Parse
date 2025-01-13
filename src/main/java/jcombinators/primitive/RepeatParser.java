@@ -19,7 +19,7 @@ public final class RepeatParser<T> implements Parser<List<T>> {
     }
 
     @Override
-    public final Result<List<T>> apply(final Input input) {
+    public Result<List<T>> apply(final Input input) {
         final List<T> values = new ArrayList<>();
         Input current = input;
         boolean stop = false;

@@ -21,12 +21,12 @@ public final class ChoiceParser<T> implements Parser<T> {
     }
 
     @Override
-    public final Description description() {
+    public Description description() {
         return new Choice(List.of(first.description(), second.description()));
     }
 
     @Override
-    public final Result<T> apply(final Input input) {
+    public Result<T> apply(final Input input) {
         return switch (first.apply(input)) {
             case Error<T> firstError -> switch (second.apply(input)) {
                 case Success<T> success -> success;

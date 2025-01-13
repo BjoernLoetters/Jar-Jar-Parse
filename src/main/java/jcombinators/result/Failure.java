@@ -4,7 +4,6 @@ import jcombinators.description.Description;
 import jcombinators.input.Input;
 
 import java.util.Optional;
-import java.util.Set;
 
 public sealed abstract class Failure<T> extends Result<T> permits Abort, Error {
 
@@ -31,12 +30,12 @@ public sealed abstract class Failure<T> extends Result<T> permits Abort, Error {
     }
 
     public static String format(final Input input, final Description description) {
-        final String unexpected = input.isEmpty() ? "end of input" : String.format("character '%s'", String.valueOf(Character.toChars(input.codePointAt(0))));
+        final String unexpected = input.isEmpty() ? "end of input" : String.format("character '%s'", String.valueOf(Character.toChars(input.getCodePoint())));
         final Optional<String> expected = description.normalize().describe();
         if (expected.isEmpty()) {
-            return String.format("unexpected %s", unexpected);
+            return String.format("syntax error in %s at line %d and character %d: unexpected %s", input.name, input.position.line, input.position.column, unexpected);
         } else {
-            return String.format("unexpected %s, expected %s", unexpected, expected.get());
+            return String.format("syntax error in %s at line %d and character %d: unexpected %s, expected %s", input.name, input.position.line, input.position.column, unexpected, expected.get());
         }
     }
 

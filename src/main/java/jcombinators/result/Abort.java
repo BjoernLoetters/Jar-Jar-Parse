@@ -13,14 +13,14 @@ public final class Abort<T> extends Failure<T> {
     }
 
     @Override
-    public final <U> Result<U> map(Function<T, U> function) {
+    public <U> Result<U> map(Function<T, U> function) {
         @SuppressWarnings("unchecked")
         final Abort<U> error = (Abort<U>) this;
         return error;
     }
 
     @Override
-    public final <U> Result<U> flatMap(Function<T, Result<U>> function) {
+    public <U> Result<U> flatMap(Function<T, Result<U>> function) {
         @SuppressWarnings("unchecked")
         final Abort<U> error = (Abort<U>) this;
         return error;

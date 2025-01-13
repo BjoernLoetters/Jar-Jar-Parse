@@ -18,31 +18,31 @@ public final class LiteralParser implements Parser<String> {
     }
 
     @Override
-    public final Description description() {
+    public Description description() {
         return new Literal(literal);
     }
 
     @Override
-    public final Result<String> apply(final Input input) {
-        final int inputLength = input.length();
-        final int prefixLength = literal.length();
-        int i = 0;
+    public Result<String> apply(Input input) {
+        final int length = literal.length();
 
-        while (i < inputLength && i < prefixLength) {
-            final int a = input.codePointAt(i);
+        int i = 0;
+        while (!input.isEmpty() && i < length) {
+            final int a = input.getCodePoint();
             final int b = literal.codePointAt(i);
 
             if (a != b) {
                 break;
             }
 
+            input = input.next();
             i += Character.charCount(a);
         }
 
-        if (i == prefixLength) {
-            return new Success<>(literal, input.subSequence(i));
+        if (i == length) {
+            return new Success<>(literal, input);
         } else {
-            return new Error<>(Failure.format(input.subSequence(i), description()), input);
+            return new Error<>(Failure.format(input, description()), input);
         }
     }
 

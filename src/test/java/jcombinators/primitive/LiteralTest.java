@@ -15,17 +15,17 @@ public final class LiteralTest extends ParserTest {
 
     @Test
     public void literalFailureUnexpectedCharacterTest() {
-        assertFailure(parser, "unexpected character 'w', expected the literal 'hello'", "world");
+        assertFailure(parser, "syntax error in Test 'literalFailureUnexpectedCharacterTest' at line 1 and character 1: unexpected character 'w', expected the literal 'hello'", "world");
     }
 
     @Test
     public void literalFailureEndOfInputTest() {
-        assertFailure(parser, "unexpected end of input, expected the literal 'hello'", "");
+        assertFailure(parser, "syntax error in Test 'literalFailureEndOfInputTest' at line 1 and character 1: unexpected end of input, expected the literal 'hello'", "");
     }
 
     @Test
     public void literalPartialMatchFailureTest() {
-        assertFailure(parser, "unexpected character ' ', expected the literal 'hello'", "hel world");
+        assertFailure(parser, "syntax error in Test 'literalPartialMatchFailureTest' at line 1 and character 4: unexpected character ' ', expected the literal 'hello'", "hel world");
     }
 
     @Test
@@ -35,7 +35,7 @@ public final class LiteralTest extends ParserTest {
 
     @Test
     public void literalCaseSensitiveTest() {
-        assertFailure(parser, "unexpected character 'H', expected the literal 'hello'", "Hello");
+        assertFailure(parser, "syntax error in Test 'literalCaseSensitiveTest' at line 1 and character 1: unexpected character 'H', expected the literal 'hello'", "Hello");
     }
 
     @Test
@@ -44,8 +44,8 @@ public final class LiteralTest extends ParserTest {
         final Parser<String> unicodeParser = new LiteralParser(unicodeLiteral);
 
         assertSuccess(unicodeParser, "😀", "😀");
-        assertFailure(unicodeParser, "unexpected character '🙂', expected the literal '😀'", "🙂");
-        assertFailure(unicodeParser, "unexpected end of input, expected the literal '😀'", "");
+        assertFailure(unicodeParser, "syntax error in Test 'literalUnicodeTest' at line 1 and character 1: unexpected character '🙂', expected the literal '😀'", "🙂");
+        assertFailure(unicodeParser, "syntax error in Test 'literalUnicodeTest' at line 1 and character 1: unexpected end of input, expected the literal '😀'", "");
     }
 
 }

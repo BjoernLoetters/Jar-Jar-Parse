@@ -5,9 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public sealed abstract class Description permits Choice, Literal, Negation, Regex, Sequence, Unknown {
+public sealed abstract class Description permits Choice, Literal, Negation, Regex, Sequence, Empty {
 
     public abstract Optional<String> describe();
 
@@ -51,8 +50,8 @@ public sealed abstract class Description permits Choice, Literal, Negation, Rege
             case Negation negation:
                 return normalize(negation.description, !negate);
 
-            case Unknown unknown:
-                return unknown;
+            case Empty empty:
+                return empty;
         }
     }
 

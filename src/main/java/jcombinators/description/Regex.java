@@ -12,7 +12,7 @@ public final class Regex extends Description {
     }
 
     @Override
-    public final Optional<String> describe() {
+    public Optional<String> describe() {
         return Optional.of(String.format("an input that matches '%s'", pattern.pattern()));
     }
 

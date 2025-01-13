@@ -11,7 +11,7 @@ public final class Literal extends Description {
     }
 
     @Override
-    public final Optional<String> describe() {
+    public Optional<String> describe() {
         if (literal.isEmpty()) {
             return Optional.empty();
         } else {

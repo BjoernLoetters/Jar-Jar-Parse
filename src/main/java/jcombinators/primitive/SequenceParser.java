@@ -1,8 +1,6 @@
 package jcombinators.primitive;
 
 import jcombinators.Parser;
-import jcombinators.description.Description;
-import jcombinators.description.Unknown;
 import jcombinators.input.Input;
 import jcombinators.result.Failure;
 import jcombinators.result.Result;
@@ -21,12 +19,7 @@ public final class SequenceParser<T> implements Parser<List<T>> {
     }
 
     @Override
-    public final Description description() {
-        return new Unknown();
-    }
-
-    @Override
-    public final Result<List<T>> apply(final Input input) {
+    public Result<List<T>> apply(final Input input) {
         final List<T> sequence = new ArrayList<>();
         Input current = input;
 

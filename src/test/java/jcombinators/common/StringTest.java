@@ -19,8 +19,8 @@ public final class StringTest extends ParserTest {
     public void regexPrefixMatchTest() {
         Parser<String> wordParser = regex("abc");
         assertSuccess(wordParser, "abc", "abc_hello_world");
-        assertFailure(wordParser, "unexpected character 'd', expected an input that matches 'abc'", "dabc");
-        assertFailure(wordParser, "unexpected character 'a', expected an input that matches 'abc'", "aabc");
+        assertFailure(wordParser, "syntax error in Test 'regexPrefixMatchTest' at line 1 and character 1: unexpected character 'd', expected an input that matches 'abc'", "dabc");
+        assertFailure(wordParser, "syntax error in Test 'regexPrefixMatchTest' at line 1 and character 1: unexpected character 'a', expected an input that matches 'abc'", "aabc");
     }
 
     @Test
@@ -53,12 +53,12 @@ public final class StringTest extends ParserTest {
 
     @Test
     public void lowercaseFailureTest() {
-        assertFailure(lowercase, "unexpected character 'A', expected an input that matches '[a-z]'", "ABC");
+        assertFailure(lowercase, "syntax error in Test 'lowercaseFailureTest' at line 1 and character 1: unexpected character 'A', expected an input that matches '[a-z]'", "ABC");
     }
 
     @Test
     public void uppercaseFailureTest() {
-        assertFailure(uppercase, "unexpected character 'a', expected an input that matches '[A-Z]'", "abc");
+        assertFailure(uppercase, "syntax error in Test 'uppercaseFailureTest' at line 1 and character 1: unexpected character 'a', expected an input that matches '[A-Z]'", "abc");
     }
 
     @Test
@@ -70,7 +70,7 @@ public final class StringTest extends ParserTest {
     @Test
     public void characterFailureTest() {
         Parser<Character> parser = character('x');
-        assertFailure(parser, "unexpected character 'y', expected the literal 'x'", "yza");
+        assertFailure(parser, "syntax error in Test 'characterFailureTest' at line 1 and character 1: unexpected character 'y', expected the literal 'x'", "yza");
     }
 
 }

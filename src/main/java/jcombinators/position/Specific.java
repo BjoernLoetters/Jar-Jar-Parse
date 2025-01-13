@@ -1,9 +1,11 @@
 package jcombinators.position;
 
+import jcombinators.input.Input;
+
 public final class Specific extends Position {
 
-    public Specific(final int line, final int column) {
-        super(line, column);
+    public Specific(final Input input, final int line, final int column) {
+        super(input, line, column);
     }
 
 }

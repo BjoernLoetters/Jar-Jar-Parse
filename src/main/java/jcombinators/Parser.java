@@ -3,7 +3,7 @@ package jcombinators;
 import jcombinators.data.Tuple;
 import jcombinators.description.Description;
 import jcombinators.description.Negation;
-import jcombinators.description.Unknown;
+import jcombinators.description.Empty;
 import jcombinators.input.Input;
 import jcombinators.primitive.*;
 import jcombinators.result.*;
@@ -20,41 +20,41 @@ import java.util.stream.Stream;
 @FunctionalInterface
 public interface Parser<T> extends Function<Input, Result<T>> {
 
-    public abstract Result<T> apply(final Input input);
+    Result<T> apply(final Input input);
 
-    public default Description description() {
-        return new Unknown();
+    default Description description() {
+        return new Empty();
     }
 
-    public default Parser<List<T>> repeat() {
+    default Parser<List<T>> repeat() {
         return new RepeatParser<>(this);
     }
 
-    public default Parser<List<T>> repeat1() {
-        return this.and(this.repeat()).map(tuple -> Stream.concat(Stream.of(tuple.first()), tuple.second().stream()).collect(Collectors.toList()));
+    default Parser<List<T>> repeat1() {
+        return this.and(this.repeat()).map(tuple -> tuple.map(Stream::of, List::stream).fold(Stream::concat).collect(Collectors.toList()));
     }
 
-    public default <U> Parser<U> map(final Function<T, U> function) {
+    default <U> Parser<U> map(final Function<T, U> function) {
         return new MapParser<>(this, function);
     }
 
-    public default <U> Parser<U> flatMap(final Function<T, Parser<U>> function) {
+    default <U> Parser<U> flatMap(final Function<T, Parser<U>> function) {
         return new FlatMapParser<>(this, function);
     }
 
-    public default <U> Parser<U> andr(final Parser<U> parser) {
+    default <U> Parser<U> andr(final Parser<U> parser) {
         return this.flatMap(ignore -> parser);
     }
 
-    public default <U> Parser<T> andl(final Parser<U> parser) {
+    default <U> Parser<T> andl(final Parser<U> parser) {
         return this.flatMap(result -> parser.map(ignore -> result));
     }
 
-    public default <U> Parser<Tuple<T, U>> and(final Parser<U> parser) {
-        return this.flatMap(first -> parser.map(second -> new Tuple<>(first, second)));
+    default <U> Parser<Tuple<T, U>> and(final Parser<U> parser) {
+        return this.flatMap(first -> parser.map(second -> Tuple.of(first, second)));
     }
 
-    public default Parser<T> commit() {
+    default Parser<T> commit() {
         return (input -> switch (apply(input)) {
             case Success<T> success -> success;
             case Error<T> error -> new Abort<>(error.message, error.rest);
@@ -62,14 +62,14 @@ public interface Parser<T> extends Function<Input, Result<T>> {
         });
     }
 
-    public default Parser<Void> not() {
+    default Parser<Void> not() {
         return (input -> switch (apply(input)) {
             case Success<T> success -> new Error<>(Failure.format(input, new Negation(this.description())), input);
             case Failure<T> ignore -> new Success<>(null, input);
         });
     }
 
-    public default Parser<Optional<T>> optional() {
+    default Parser<Optional<T>> optional() {
         return (input -> switch(apply(input)) {
             case Success<T> success -> new Success<>(Optional.of(success.value), success.rest);
             case Error<T> error -> new Success<>(Optional.empty(), error.rest);
@@ -81,20 +81,20 @@ public interface Parser<T> extends Function<Input, Result<T>> {
         });
     }
 
-    public default <U> Parser<List<T>> separate(final Parser<U> separator) {
+    default <U> Parser<List<T>> separate(final Parser<U> separator) {
         return separate1(separator).optional().map(optional -> optional.orElse(List.of()));
     }
 
-    public default <U> Parser<List<T>> separate1(final Parser<U> separator) {
+    default <U> Parser<List<T>> separate1(final Parser<U> separator) {
         return this.and(separator.and(this).repeat())
-                .map(tuple -> Stream.concat(Stream.of(tuple.first()), tuple.second().stream().map(Tuple::second)).collect(Collectors.toList()));
+                .map(tuple -> tuple.map(Stream::of, list -> list.stream().map(Tuple::second)).fold(Stream::concat).toList());
     }
 
-    public default Parser<T> or(final Parser<T> alternative) {
+    default Parser<T> or(final Parser<T> alternative) {
         return or(this, alternative);
     }
 
-    public static <T> Parser<T> chainl(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
+    static <T> Parser<T> chainl1(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
         return element.and(separator.and(element).repeat()).map(tuple -> {
             T result = tuple.first();
 
@@ -106,7 +106,11 @@ public interface Parser<T> extends Function<Input, Result<T>> {
         });
     }
 
-    public static <T> Parser<T> chainr(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
+    static <T> Parser<T> chainl(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator, final T otherwise) {
+        return chainl1(element, separator).optional().map(result -> result.orElse(otherwise));
+    }
+
+    static <T> Parser<T> chainr1(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
         return element.and(separator.and(element).repeat()).map(tuple -> {
             if (tuple.second().isEmpty()) {
                 return tuple.first();
@@ -130,20 +134,24 @@ public interface Parser<T> extends Function<Input, Result<T>> {
         });
     }
 
-    public static <T> Parser<T> success(final T value) {
+    static <T> Parser<T> chainr(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator, final T otherwise) {
+        return chainl1(element, separator).optional().map(result -> result.orElse(otherwise));
+    }
+
+    static <T> Parser<T> success(final T value) {
         return (input -> new Success<>(value, input));
     }
 
-    public static <T> Parser<T> fail(final String message) {
+    static <T> Parser<T> fail(final String message) {
         return (input -> new Error<>(message, input));
     }
 
-    public static <T> Parser<T> abort(final String message) {
+    static <T> Parser<T> abort(final String message) {
         return (input -> new Abort<>(message, input));
     }
 
     @SafeVarargs
-    public static <T> Parser<T> or(final Parser<? extends T> alternative, final Parser<? extends T> ... alternatives) {
+    static <T> Parser<T> or(final Parser<? extends T> alternative, final Parser<? extends T>... alternatives) {
         @SuppressWarnings("unchecked")
         Parser<T> choice = (Parser<T>) alternative;
 
@@ -157,7 +165,7 @@ public interface Parser<T> extends Function<Input, Result<T>> {
     }
 
     @SafeVarargs
-    public static <T> Parser<List<T>> sequence(final Parser<? extends T> ... parsers) {
+    static <T> Parser<List<T>> sequence(final Parser<? extends T>... parsers) {
         final List<Parser<T>> sequence = Stream.of(parsers).map(parser -> {
             @SuppressWarnings("unchecked")
             final Parser<T> up = (Parser<T>) parser;

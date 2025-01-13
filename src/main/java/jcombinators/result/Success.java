@@ -15,27 +15,27 @@ public final class Success<T> extends Result<T> {
     }
 
     @Override
-    public final Optional<T> get() {
+    public Optional<T> get() {
         return Optional.of(value);
     }
 
     @Override
-    public final boolean isFailure() {
+    public boolean isFailure() {
         return false;
     }
 
     @Override
-    public final boolean isSuccess() {
+    public boolean isSuccess() {
         return true;
     }
 
     @Override
-    public final <U> Result<U> map(final Function<T, U> function) {
+    public <U> Result<U> map(final Function<T, U> function) {
         return new Success<>(function.apply(value), rest);
     }
 
     @Override
-    public final <U> Result<U> flatMap(final Function<T, Result<U>> function) {
+    public <U> Result<U> flatMap(final Function<T, Result<U>> function) {
         return function.apply(value);
     }
 

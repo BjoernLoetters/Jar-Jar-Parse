@@ -27,7 +27,7 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void repeat1FailureNoMatchTest() {
         Parser<List<Character>> parser = character('a').repeat1();
-        assertFailure(parser, "unexpected character 'b', expected the literal 'a'", "b");
+        assertFailure(parser, "syntax error in Test 'repeat1FailureNoMatchTest' at line 1 and character 1: unexpected character 'b', expected the literal 'a'", "b");
     }
 
     @Test
@@ -39,7 +39,7 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void repeat1EmptyInputTest() {
         Parser<List<Character>> parser = character('a').repeat1();
-        assertFailure(parser, "unexpected end of input, expected the literal 'a'", "");
+        assertFailure(parser, "syntax error in Test 'repeat1EmptyInputTest' at line 1 and character 1: unexpected end of input, expected the literal 'a'", "");
     }
 
     @Test
@@ -57,7 +57,7 @@ public final class CombinatorTest extends ParserTest {
         Parser<Character> second = character('b');
         Parser<Character> parser = first.andr(second);
 
-        assertFailure(parser, "unexpected character 'c', expected the literal 'b'", "ac");
+        assertFailure(parser, "syntax error in Test 'keepRightFailureTest' at line 1 and character 2: unexpected character 'c', expected the literal 'b'", "ac");
     }
 
     @Test
@@ -75,7 +75,7 @@ public final class CombinatorTest extends ParserTest {
         Parser<Character> second = character('b');
         Parser<Character> parser = first.andl(second);
 
-        assertFailure(parser, "unexpected character 'c', expected the literal 'b'", "ac");
+        assertFailure(parser, "syntax error in Test 'keepLeftFailureTest' at line 1 and character 2: unexpected character 'c', expected the literal 'b'", "ac");
     }
 
     @Test
@@ -93,7 +93,7 @@ public final class CombinatorTest extends ParserTest {
         Parser<Character> second = character('b');
         Parser<Tuple<Character, Character>> parser = first.and(second);
 
-        assertFailure(parser, "unexpected character 'c', expected the literal 'b'", "ac");
+        assertFailure(parser, "syntax error in Test 'andFailureTest' at line 1 and character 2: unexpected character 'c', expected the literal 'b'", "ac");
     }
 
     @Test
@@ -105,7 +105,7 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void notFailureTest() {
         final Parser<Void> parser = character('a').not();
-        assertFailure(parser, "unexpected character 'a', expected anything but the literal 'a'", "a");
+        assertFailure(parser, "syntax error in Test 'notFailureTest' at line 1 and character 1: unexpected character 'a', expected anything but the literal 'a'", "a");
     }
 
     @Test
@@ -154,15 +154,15 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void separate1FailureTest() {
         final Parser<List<Character>> parser = character('a').separate1(character(','));
-        assertFailure(parser, "unexpected end of input, expected the literal 'a'", "");
-        assertFailure(parser, "unexpected character 'b', expected the literal 'a'", "b");
+        assertFailure(parser, "syntax error in Test 'separate1FailureTest' at line 1 and character 1: unexpected end of input, expected the literal 'a'", "");
+        assertFailure(parser, "syntax error in Test 'separate1FailureTest' at line 1 and character 1: unexpected character 'b', expected the literal 'a'", "b");
     }
 
     @Test
     public void chainLeftSuccessTest() {
         final Parser<Integer> number = regex("[0-9]").map(Integer::parseInt);
         final Parser<BiFunction<Integer, Integer, Integer>> plus = character('+').map(op -> Integer::sum);
-        final Parser<Integer> parser = Parser.chainl(number, plus);
+        final Parser<Integer> parser = Parser.chainl1(number, plus);
 
         assertSuccess(parser, 6, "1+2+3");
     }
@@ -171,7 +171,7 @@ public final class CombinatorTest extends ParserTest {
     public void chainRightSuccessTest() {
         final Parser<Integer> number = regex("[0-9]").map(Integer::parseInt);
         final Parser<BiFunction<Integer, Integer, Integer>> exponent = character('^').map(op -> (a, b) -> (int) Math.pow(a, b));
-        final Parser<Integer> parser = Parser.chainr(number, exponent);
+        final Parser<Integer> parser = Parser.chainr1(number, exponent);
 
         assertSuccess(parser, 2, "2^3^0");
     }
@@ -203,7 +203,7 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void commitFailureTest() {
         Parser<Character> parser = character('a').commit();
-        assertFailure(parser, "unexpected character 'b', expected the literal 'a'", "b");
+        assertFailure(parser, "syntax error in Test 'commitFailureTest' at line 1 and character 1: unexpected character 'b', expected the literal 'a'", "b");
     }
 
     @Test
@@ -215,7 +215,7 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void commitChoiceNoBacktrackingTest() {
         Parser<Character> parser = character('a').commit().or(character('b'));
-        assertFailure(parser, "unexpected character 'b', expected the literal 'a'", "b");
+        assertFailure(parser, "syntax error in Test 'commitChoiceNoBacktrackingTest' at line 1 and character 1: unexpected character 'b', expected the literal 'a'", "b");
     }
 
 }

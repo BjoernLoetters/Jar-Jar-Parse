@@ -1,68 +1,68 @@
 package jcombinators.input;
 
+import jcombinators.position.Position;
+import jcombinators.position.Specific;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class Input implements CharSequence {
+public final class Input {
 
     public final String name;
 
-    private final String contents;
+    public final Position position;
 
-    private final int offset;
+    final String contents;
 
-    private final int length;
+    final int offset;
 
-    private Input(final String name, final String contents, final int offset, final int length) {
+    private Input(final String name, final String contents, final int offset, final int line, final int column) {
         this.name = name;
-        this.contents = contents;
+        this.position = new Specific(this, line, column);
         this.offset = offset;
-        this.length = length;
+        this.contents = contents;
     }
 
-    @Override
-    public final int length() {
-        return length;
-    }
-
-    @Override
-    public final char charAt(final int index) {
-        if (index < 0 || index >= length) {
-            throw new IndexOutOfBoundsException(index);
+    public int getCodePoint() {
+        if (Character.isHighSurrogate(contents.charAt(offset)) && offset + 1 < contents.length() && Character.isLowSurrogate(contents.charAt(offset + 1))) {
+            return Character.toCodePoint(contents.charAt(offset), contents.charAt(offset + 1));
         } else {
-            return contents.charAt(offset + index);
+            return contents.charAt(offset);
         }
     }
 
-    public final int codePointAt(final int index) {
-        if (index < 0 || index >= length) {
-            throw new IndexOutOfBoundsException(index);
+    public Input next() {
+        if (isEmpty()) {
+            return this;
         } else {
-            return Character.codePointAt(this, index);
+            final int line;
+            final int column;
+
+            if (getCodePoint() == '\n') {
+                line = position.line + 1;
+                column = 1;
+            } else {
+                line = position.line;
+                column = position.column + 1;
+            }
+
+            return new Input(name, contents, offset + Character.charCount(this.getCodePoint()), line, column);
         }
     }
 
-    @Override
-    public final Input subSequence(final int start, final int end) {
-        if (end < 0 || end > length) {
-            throw new IndexOutOfBoundsException(end);
-        } else if (start < 0 || start > end) {
-            throw new IndexOutOfBoundsException(start);
-        } else {
-            return new Input(name, contents, offset + start, end - start);
+    public Input drop(final int number) {
+        Input result = this;
+        for (int i = 0; i < number && !result.isEmpty(); ++i) {
+            result = result.next();
         }
+        return result;
     }
 
-    public final Input subSequence(final int start) {
-        return subSequence(start, length);
-    }
-
-    @Override
-    public final String toString() {
-        return contents.substring(offset, offset + length);
+    public boolean isEmpty() {
+        return offset >= contents.length();
     }
 
     public static Input of(final String name, final InputStream stream, final Charset charset) throws IOException {
@@ -82,7 +82,7 @@ public class Input implements CharSequence {
 
     public static Input of(final String name, final CharSequence sequence) {
         final String contents = sequence.toString();
-        return new Input(name, contents, 0, contents.length());
+        return new Input(name, contents, 0, 1, 1);
     }
 
 }

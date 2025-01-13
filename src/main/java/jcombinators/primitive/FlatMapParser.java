@@ -21,12 +21,12 @@ public final class FlatMapParser<T, U> implements Parser<U> {
     }
 
     @Override
-    public final Description description() {
+    public Description description() {
         return parser.description();
     }
 
     @Override
-    public final Result<U> apply(final Input input) {
+    public Result<U> apply(final Input input) {
         return switch (parser.apply(input)) {
             case Success<T> success -> function.apply(success.value).apply(success.rest);
             case Failure<T> failure -> {

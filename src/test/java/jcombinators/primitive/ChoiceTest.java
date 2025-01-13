@@ -27,7 +27,7 @@ public final class ChoiceTest extends ParserTest {
 
     @Test
     public void failChoiceTest() {
-        assertFailure(parser, "unexpected character '@', expected an input that matches '([0-9])|([a-z])'", "@");
+        assertFailure(parser, "syntax error in Test 'failChoiceTest' at line 1 and character 1: unexpected character '@', expected an input that matches '([0-9])|([a-z])'", "@");
     }
 
     @Test
@@ -40,7 +40,7 @@ public final class ChoiceTest extends ParserTest {
 
     @Test
     public void emptyChoiceTest() {
-        assertFailure(parser, "unexpected end of input, expected an input that matches '([0-9])|([a-z])'", "");
+        assertFailure(parser, "syntax error in Test 'emptyChoiceTest' at line 1 and character 1: unexpected end of input, expected an input that matches '([0-9])|([a-z])'", "");
     }
 
 }

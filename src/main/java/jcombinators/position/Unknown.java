@@ -1,9 +1,11 @@
 package jcombinators.position;
 
+import jcombinators.input.Input;
+
 public final class Unknown extends Position {
 
     public Unknown() {
-        super(-1, -1);
+        super(Input.of("<unknown>", ""), -1, -1);
     }
 
 }

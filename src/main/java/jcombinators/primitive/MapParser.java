@@ -26,7 +26,7 @@ public final class MapParser<A, B> implements Parser<B> {
     }
 
     @Override
-    public final Result<B> apply(final Input input) {
+    public Result<B> apply(final Input input) {
         return switch (parser.apply(input)) {
             case Success<A> success -> new Success<>(function.apply(success.value), success.rest);
             case Failure<A> failure -> {

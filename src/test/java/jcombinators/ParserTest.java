@@ -43,7 +43,7 @@ public abstract class ParserTest {
     }
 
     public final <T> void assertSuccess(final Parser<T> parser, final T expected, final String string) {
-        final Input input = Input.of("Test '" + getTestName() + "'", string);
+        final Input input = Input.of("Test '" + getTestName().orElse("<unknown test>") + "'", string);
         switch (parser.apply(input)) {
             case Success<T> success:
                 assertEquals(expected, success.value);
@@ -56,7 +56,7 @@ public abstract class ParserTest {
     }
 
     public final void assertFailure(final Parser<?> parser, final String message, final String string) {
-        final Input input = Input.of("Test '" + getTestName() + "'", string);
+        final Input input = Input.of("Test '" + getTestName().orElse("<unknown test>") + "'", string);
         switch (parser.apply(input)) {
             case Success<?> success:
                 fail("expected parse failure, but got success with value '" + success.value + "'");

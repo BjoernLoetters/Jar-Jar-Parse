@@ -5,6 +5,7 @@ import jcombinators.description.Description;
 import jcombinators.description.Literal;
 import jcombinators.description.Regex;
 import jcombinators.input.Input;
+import jcombinators.input.InputWrapper;
 import jcombinators.result.Error;
 import jcombinators.result.Failure;
 import jcombinators.result.Result;
@@ -26,16 +27,16 @@ public final class RegexParser implements Parser<String> {
     }
 
     @Override
-    public final Description description() {
+    public Description description() {
         return new Regex(pattern);
     }
 
     @Override
-    public final Result<String> apply(final Input input) {
-        final Matcher matcher = pattern.matcher(input);
+    public Result<String> apply(final Input input) {
+        final Matcher matcher = pattern.matcher(new InputWrapper(input));
         if (matcher.lookingAt()) {
             final String value = matcher.group();
-            return new Success<>(value, input.subSequence(value.length()));
+            return new Success<>(value, input.drop(value.length()));
         } else {
             return new Error<>(Failure.format(input, description()), input);
         }
