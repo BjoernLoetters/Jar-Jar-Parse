@@ -14,15 +14,20 @@ This approach allows the rapid development of parsers with all the benefits of o
 So, instead of generating a parser using a third party tool and a grammar specification, we "program" the syntax of our language in our primary programming language. 
 
 In Java Parser Combinators, parsers are implemented as functions: 
-They take an `Input` (which is basically a `String`) and produce a `ParseResult<T>`.
+They take an `Input` (which is basically a `String`) and produce a `Result<T>`.
 Here, the type `T` indicates the type of the result. 
-So, for example:
-- A character parser takes an `Input` and produces a `ParseResult<Character>`
-- A string parser takes an `Input` and produces a `ParseResult<String>`
-- A parser which concatenates a character with a string parser produces a `ParseResult<Tuple<Character, String>>` 
+For example:
+- A character parser takes an `Input` and produces a `Result<Character>`
+- A string parser takes an `Input` and produces a `Result<String>`
+- A parser which concatenates a character with a string parser produces a `Result<Tuple<Character, String>>` 
 
 Of course, a parse may also fail. 
-For this reason, a `ParseResult<T>` may either be a `Success<T>` (containing the desired result) or a `Failure<T>` (containing an error message). 
+For this reason, a `Result<T>` may either be a `Success<T>` (containing the desired result) or a `Failure<T>` (containing an error message). 
+Since parsers are just functions, we may also implement a primitive parser using the lambda notation:
+
+```
+Parser<Void> nothing = input -> new Success<>(null, input);
+```
 
 ### Getting Started
 
