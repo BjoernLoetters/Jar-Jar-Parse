@@ -5,6 +5,7 @@ import jcombinators.description.Description;
 import jcombinators.description.Negation;
 import jcombinators.description.Empty;
 import jcombinators.input.Input;
+import jcombinators.position.Position;
 import jcombinators.primitive.*;
 import jcombinators.result.*;
 import jcombinators.result.Error;
@@ -173,6 +174,13 @@ public interface Parser<T> extends Function<Input, Result<T>> {
         }).collect(Collectors.toList());
 
         return new SequenceParser<>(sequence);
+    }
+
+    static <T> Parser<T> position(final Parser<Function<Position, T>> parser) {
+        return input -> {
+            final Position position = input.position;
+            return parser.apply(input).map(function -> function.apply(position));
+        };
     }
 
 }

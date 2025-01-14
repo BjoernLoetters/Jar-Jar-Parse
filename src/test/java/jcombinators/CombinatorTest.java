@@ -1,14 +1,22 @@
 package jcombinators;
 
 import jcombinators.data.Tuple;
+import jcombinators.input.Input;
+import jcombinators.position.Position;
+import jcombinators.result.Result;
+import jcombinators.result.Success;
 import org.junit.Test;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
+import static jcombinators.Parser.position;
 import static jcombinators.common.StringParser.character;
 import static jcombinators.common.StringParser.regex;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public final class CombinatorTest extends ParserTest {
 
@@ -216,6 +224,28 @@ public final class CombinatorTest extends ParserTest {
     public void commitChoiceNoBacktrackingTest() {
         Parser<Character> parser = character('a').commit().or(character('b'));
         assertFailure(parser, "syntax error in Test 'commitChoiceNoBacktrackingTest' at line 1 and character 1: unexpected character 'b', expected the literal 'a'", "b");
+    }
+
+    @Test
+    public void positionParserCorrectPositionTest() {
+        final String contents = "line1\nline2\nline3\n";
+        final Input input = Input.of("test", contents);
+
+        final Parser<Function<Position, String>> parser = regex("line[0-9]\n").map(ignore -> position -> position.line + ":" + position.column);
+
+        final Parser<String> positionParser = position(parser);
+        final Result<String> firstResult = positionParser.apply(input);
+
+        assertTrue(firstResult.isSuccess());
+        assertEquals("1:1", firstResult.get().get());
+
+        final Result<String> secondResult = positionParser.apply(firstResult.rest);
+        assertTrue(secondResult.isSuccess());
+        assertEquals("2:1", secondResult.get().get());
+
+        final Result<String> thirdResult = positionParser.apply(secondResult.rest);
+        assertTrue(thirdResult.isSuccess());
+        assertEquals("3:1", thirdResult.get().get());
     }
 
 }
