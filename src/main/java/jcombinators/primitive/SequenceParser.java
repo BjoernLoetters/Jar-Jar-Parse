@@ -21,13 +21,13 @@ public final class SequenceParser<T> implements Parser<List<T>> {
     @Override
     public Result<List<T>> apply(final Input input) {
         final List<T> sequence = new ArrayList<>();
-        Input current = input;
+        Input current = input.skipWhiteSpace();
 
         for (final Parser<T> parser: parsers) {
             switch (parser.apply(current)) {
                 case Success<T> success:
                     sequence.add(success.value);
-                    current = success.rest;
+                    current = success.rest.skipWhiteSpace();
                     continue;
 
                 case Failure<T> failure:

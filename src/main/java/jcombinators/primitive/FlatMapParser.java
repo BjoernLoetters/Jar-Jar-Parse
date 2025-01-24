@@ -27,8 +27,9 @@ public final class FlatMapParser<T, U> implements Parser<U> {
 
     @Override
     public Result<U> apply(final Input input) {
-        return switch (parser.apply(input)) {
-            case Success<T> success -> function.apply(success.value).apply(success.rest);
+        return switch (parser.apply(input.skipWhiteSpace())) {
+            case Success<T> success ->
+                function.apply(success.value).apply(success.rest.skipWhiteSpace());
             case Failure<T> failure -> {
                 @SuppressWarnings("unchecked")
                 final Failure<U> result = (Failure<U>) failure;

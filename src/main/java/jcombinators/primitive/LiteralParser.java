@@ -24,6 +24,7 @@ public final class LiteralParser implements Parser<String> {
 
     @Override
     public Result<String> apply(Input input) {
+        input = input.skipWhiteSpace();
         final int length = literal.length();
 
         int i = 0;

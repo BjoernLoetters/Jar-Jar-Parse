@@ -56,7 +56,7 @@ public interface Parser<T> extends Function<Input, Result<T>> {
     }
 
     default Parser<T> commit() {
-        return (input -> switch (apply(input)) {
+        return (input -> switch (apply(input.skipWhiteSpace())) {
             case Success<T> success -> success;
             case Error<T> error -> new Abort<>(error.message, error.rest);
             case Abort<T> abort -> abort;
@@ -64,14 +64,17 @@ public interface Parser<T> extends Function<Input, Result<T>> {
     }
 
     default Parser<Void> not() {
-        return (input -> switch (apply(input)) {
-            case Success<T> success -> new Error<>(Failure.format(input, new Negation(this.description())), input);
-            case Failure<T> ignore -> new Success<>(null, input);
+        return (input -> {
+            input = input.skipWhiteSpace();
+            return switch (apply(input)) {
+                case Success<T> ignore -> new Error<>(Failure.format(input, new Negation(this.description())), input);
+                case Failure<T> ignore -> new Success<>(null, input);
+            };
         });
     }
 
     default Parser<Optional<T>> optional() {
-        return (input -> switch(apply(input)) {
+        return (input -> switch(apply(input.skipWhiteSpace())) {
             case Success<T> success -> new Success<>(Optional.of(success.value), success.rest);
             case Error<T> error -> new Success<>(Optional.empty(), error.rest);
             case Abort<T> abort -> {
@@ -140,15 +143,15 @@ public interface Parser<T> extends Function<Input, Result<T>> {
     }
 
     static <T> Parser<T> success(final T value) {
-        return (input -> new Success<>(value, input));
+        return (input -> new Success<>(value, input.skipWhiteSpace()));
     }
 
     static <T> Parser<T> fail(final String message) {
-        return (input -> new Error<>(message, input));
+        return (input -> new Error<>(message, input.skipWhiteSpace()));
     }
 
     static <T> Parser<T> abort(final String message) {
-        return (input -> new Abort<>(message, input));
+        return (input -> new Abort<>(message, input.skipWhiteSpace()));
     }
 
     @SafeVarargs
@@ -156,9 +159,9 @@ public interface Parser<T> extends Function<Input, Result<T>> {
         @SuppressWarnings("unchecked")
         Parser<T> choice = (Parser<T>) alternative;
 
-        for (int i = 0; i < alternatives.length; ++i) {
+        for (final Parser<? extends T> value : alternatives) {
             @SuppressWarnings("unchecked")
-            final Parser<T> parser = (Parser<T>) alternatives[i];
+            final Parser<T> parser = (Parser<T>) value;
             choice = new ChoiceParser<>(choice, parser);
         }
 
@@ -178,6 +181,7 @@ public interface Parser<T> extends Function<Input, Result<T>> {
 
     static <T> Parser<T> position(final Parser<Function<Position, T>> parser) {
         return input -> {
+            input = input.skipWhiteSpace();
             final Position position = input.position;
             return parser.apply(input).map(function -> function.apply(position));
         };

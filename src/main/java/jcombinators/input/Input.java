@@ -1,7 +1,11 @@
 package jcombinators.input;
 
+import jcombinators.Parser;
 import jcombinators.position.Position;
 import jcombinators.position.Specific;
+import jcombinators.result.Failure;
+import jcombinators.result.Result;
+import jcombinators.result.Success;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,18 +13,23 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static jcombinators.common.StringParser.regex;
+
 public final class Input {
 
     public final String name;
 
     public final Position position;
 
+    public final Parser<Void> whiteSpace;
+
     final String contents;
 
     final int offset;
 
-    private Input(final String name, final String contents, final int offset, final int line, final int column) {
+    private Input(final String name, final String contents, final Parser<Void> whiteSpace, final int offset, final int line, final int column) {
         this.name = name;
+        this.whiteSpace = whiteSpace;
         this.position = new Specific(this, line, column);
         this.offset = offset;
         this.contents = contents;
@@ -49,7 +58,7 @@ public final class Input {
                 column = position.column + 1;
             }
 
-            return new Input(name, contents, offset + Character.charCount(this.getCodePoint()), line, column);
+            return new Input(name, contents, whiteSpace, offset + Character.charCount(this.getCodePoint()), line, column);
         }
     }
 
@@ -63,6 +72,25 @@ public final class Input {
 
     public boolean isEmpty() {
         return offset >= contents.length();
+    }
+
+    private boolean skippingWhiteSpace = false;
+
+    public Input skipWhiteSpace() {
+        if (skippingWhiteSpace) {
+            return this;
+        } else {
+            skippingWhiteSpace = true;
+            try {
+                final Result<Void> result = whiteSpace.apply(this);
+                return switch (result) {
+                    case Failure<Void> failure -> failure.rest;
+                    case Success<Void> success -> success.rest;
+                };
+            } finally {
+                skippingWhiteSpace = false;
+            }
+        }
     }
 
     public static Input of(final String name, final InputStream stream, final Charset charset) throws IOException {
@@ -82,7 +110,7 @@ public final class Input {
 
     public static Input of(final String name, final CharSequence sequence) {
         final String contents = sequence.toString();
-        return new Input(name, contents, 0, 1, 1);
+        return new Input(name, contents, regex("\\s+").map(ignore -> null), 0, 1, 1);
     }
 
 }

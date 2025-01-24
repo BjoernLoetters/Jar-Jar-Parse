@@ -33,7 +33,7 @@ public final class RegexParser implements Parser<String> {
 
     @Override
     public Result<String> apply(final Input input) {
-        final Matcher matcher = pattern.matcher(new InputWrapper(input));
+        final Matcher matcher = pattern.matcher(new InputWrapper(input.skipWhiteSpace()));
         if (matcher.lookingAt()) {
             final String value = matcher.group();
             return new Success<>(value, input.drop(value.length()));

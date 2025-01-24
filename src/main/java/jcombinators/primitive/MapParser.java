@@ -27,7 +27,7 @@ public final class MapParser<A, B> implements Parser<B> {
 
     @Override
     public Result<B> apply(final Input input) {
-        return switch (parser.apply(input)) {
+        return switch (parser.apply(input.skipWhiteSpace())) {
             case Success<A> success -> new Success<>(function.apply(success.value), success.rest);
             case Failure<A> failure -> {
                 @SuppressWarnings("unchecked")

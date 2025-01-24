@@ -23,7 +23,7 @@ public final class FlatMapTest extends ParserTest {
 
     @Test
     public void flatMapFailureInnerTest() {
-        assertFailure(lengthParser, "syntax error in Test 'flatMapFailureInnerTest' at line 1 and character 6: unexpected character ' ', expected the literal 'hello'", "hello 123");
+        assertFailure(lengthParser, "syntax error in Test 'flatMapFailureInnerTest' at line 1 and character 7: unexpected character '1', expected the literal 'hello'", "hello 123");
     }
 
     @Test

@@ -21,14 +21,14 @@ public final class RepeatParser<T> implements Parser<List<T>> {
     @Override
     public Result<List<T>> apply(final Input input) {
         final List<T> values = new ArrayList<>();
-        Input current = input;
+        Input current = input.skipWhiteSpace();
         boolean stop = false;
 
         do {
             switch (parser.apply(current)) {
                 case Success<T> success:
                     values.add(success.value);
-                    current = success.rest;
+                    current = success.rest.skipWhiteSpace();
                     break;
                 case Failure<T> ignore:
                     stop = true;

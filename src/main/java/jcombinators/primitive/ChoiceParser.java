@@ -26,7 +26,8 @@ public final class ChoiceParser<T> implements Parser<T> {
     }
 
     @Override
-    public Result<T> apply(final Input input) {
+    public Result<T> apply(Input input) {
+        input = input.skipWhiteSpace();
         return switch (first.apply(input)) {
             case Error<T> firstError -> switch (second.apply(input)) {
                 case Success<T> success -> success;
