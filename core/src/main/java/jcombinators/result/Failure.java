@@ -20,6 +20,11 @@ public sealed abstract class Failure<T> extends Result<T> permits Abort, Error {
     }
 
     @Override
+    public T getOrThrow() throws RuntimeException {
+        throw new RuntimeException(message);
+    }
+
+    @Override
     public final boolean isFailure() {
         return true;
     }

@@ -15,6 +15,8 @@ public sealed abstract class Result<T> permits Failure, Success {
 
     public abstract Optional<T> get();
 
+    public abstract T getOrThrow() throws RuntimeException;
+
     public abstract boolean isFailure();
 
     public abstract boolean isSuccess();

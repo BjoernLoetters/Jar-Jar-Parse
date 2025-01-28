@@ -20,6 +20,11 @@ public final class Success<T> extends Result<T> {
     }
 
     @Override
+    public T getOrThrow() throws RuntimeException {
+        return value;
+    }
+
+    @Override
     public boolean isFailure() {
         return false;
     }

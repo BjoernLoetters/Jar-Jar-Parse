@@ -38,4 +38,4 @@ jobs:
           title: "Release ${{ github.ref_name }}"
           files: |
             LICENSE
-            target/*.jar
+            core/target/*.jar
