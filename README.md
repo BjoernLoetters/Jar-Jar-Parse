@@ -22,12 +22,7 @@ For example:
 - A parser which concatenates a character with a string parser produces a `Result<Tuple<Character, String>>` 
 
 Of course, a parse may also fail. 
-For this reason, a `Result<T>` may either be a `Success<T>` (containing the desired result) or a `Failure<T>` (containing an error message). 
-Since parsers are just functions, we may also implement a primitive parser using the lambda notation:
-
-```
-Parser<Void> nothing = input -> new Success<>(null, input);
-```
+For this reason, a `Result<T>` may either be a `Success<T>` (containing the desired result) or a `Failure<T>` (containing an error message).
 
 ### Getting Started
 
@@ -41,24 +36,25 @@ In IntelliJ this can be done by right-clicking on the `jar`-file and selecting `
 ##### Usage Example
 
 ```java
-import static jcombinators.common.StringParser.*;
+import static jcombinators.StringParsing;
 
-public class MyParser {
+public class MyParser extends StringParsing {
 
     // A parser which parses an integer.
-    public static Parser<Integer> number = regExp("[+-]?[0-9]+").map(Integer::parseInt);
+    public Parser<Integer> number = regex("[+-]?[0-9]+").map(Integer::parseInt);
 
     // A parser which parses additions.
-    public static Parser<Integer> add = number.andl(character('+')).and(number)
+    public Parser<Integer> add = number.keepLeft(character('+')).and(number)
             .map(tuple -> tuple.first() + tuple.second());
 
     public static void main(final String[] arguments) {
-        // Create an input with the name 'My Test Input' (for error reporting).
-        Input input = Input.of("My Test Input", "42+0");
-
+        // Create an input of characters with the name 'My Test Input' (for error reporting).
+        Input<Character> input = Input.of("My Test Input", "42 + 0");
+        
         // Use the 'add' parser to parse the above input. Note how a parser is
         // just a function that takes an input and returns a parse result.
-        Result<Integer> result = add.apply(input);
+        final MyParser parser = new MyParser();
+        Result<Integer> result = parser.parse(parser.add, input);
 
         switch (result) {
             case Success<Integer> success:
