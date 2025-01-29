@@ -4,7 +4,7 @@
 # Java Parser Combinators
 
 **Java Parser Combinators** is a lightweight library designed for the rapid prototyping of parsers in Java.
-It aims to balance ease of use and functionality, deliberately placing less emphasis on performance.
+It aims to balance ease of use and functionality, deliberately placing less emphasis on performance (even though first tests show that we can parse ~ 130k lines of JSON data in around 1 second on a recent M3 chip).
 
 ### Parser Combinators
 
@@ -46,7 +46,7 @@ import static jcombinators.common.StringParser.*;
 public class MyParser {
 
     // A parser which parses an integer.
-    public static Parser<Integer> number = regex("[+-]?[0-9]+").map(Integer::parseInt);
+    public static Parser<Integer> number = regExp("[+-]?[0-9]+").map(Integer::parseInt);
 
     // A parser which parses additions.
     public static Parser<Integer> add = number.andl(character('+')).and(number)

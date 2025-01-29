@@ -1,10 +1,7 @@
 package jcombinators.primitive;
 
-import jcombinators.Parser;
 import jcombinators.ParserTest;
 import org.junit.Test;
-
-import static jcombinators.common.StringParser.regex;
 
 public final class MapTest extends ParserTest {
 
@@ -18,12 +15,12 @@ public final class MapTest extends ParserTest {
 
     @Test
     public void mapFailureTest() {
-        assertFailure(lengthParser, "syntax error in Test 'mapFailureTest' at line 1 and character 1: unexpected character '1', expected an input that matches '[a-z]+'", "123");
+        assertFailure(lengthParser, "syntax error in Test 'mapFailureTest' at line 1 and column 1: unexpected character '1', expected an input that matches '[a-z]+'", "123");
     }
 
     @Test
     public void mapEmptyInputTest() {
-        assertFailure(lengthParser, "syntax error in Test 'mapEmptyInputTest' at line 1 and character 1: unexpected end of input, expected an input that matches '[a-z]+'", "");
+        assertFailure(lengthParser, "syntax error in Test 'mapEmptyInputTest' at line 1 and column 1: unexpected end of input, expected an input that matches '[a-z]+'", "");
     }
 
     @Test

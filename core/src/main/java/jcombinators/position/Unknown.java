@@ -8,4 +8,9 @@ public final class Unknown extends Position {
         super(Input.of("<unknown>", ""), -1, -1);
     }
 
+    @Override
+    public String toString() {
+        return "unknown input";
+    }
+
 }

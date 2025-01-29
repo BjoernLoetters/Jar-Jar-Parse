@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public sealed abstract class Description permits Choice, Literal, Negation, Regex, Sequence, Empty {
+public sealed abstract class Description permits Choice, Literal, Negation, RegExp, Sequence, Empty {
 
     public abstract Optional<String> describe();
 
@@ -20,13 +20,13 @@ public sealed abstract class Description permits Choice, Literal, Negation, Rege
                 final List<Description> descriptions = collect(choice, new ArrayList<>()).stream().map(element -> normalize(element, negate)).toList();
                 if (negate) {
                     return normalize(new Sequence(descriptions), false);
-                } else if (descriptions.stream().allMatch(element -> element instanceof Regex)) {
+                } else if (descriptions.stream().allMatch(element -> element instanceof RegExp)) {
                     final Pattern composition = Pattern.compile(descriptions.stream()
-                        .map(element -> ((Regex) element).pattern.pattern())
+                        .map(element -> ((RegExp) element).pattern.pattern())
                         .map(pattern -> "(" + pattern + ")")
                         .collect(Collectors.joining("|"))
                     );
-                    return new Regex(composition);
+                    return new RegExp(composition);
                 } else {
                     return new Choice(descriptions);
                 }
@@ -44,8 +44,8 @@ public sealed abstract class Description permits Choice, Literal, Negation, Rege
             case Literal literal:
                 return negate ? new Negation(literal) : literal;
 
-            case Regex regex:
-                return negate ? new Negation(regex) : regex;
+            case RegExp regExp:
+                return negate ? new Negation(regExp) : regExp;
 
             case Negation negation:
                 return normalize(negation.description, !negate);

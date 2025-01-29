@@ -3,7 +3,6 @@ package jcombinators;
 import jcombinators.data.Tuple;
 import jcombinators.input.Input;
 import jcombinators.position.Position;
-import jcombinators.result.Result;
 import org.junit.Test;
 
 import java.util.List;
@@ -11,9 +10,6 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static jcombinators.Parser.position;
-import static jcombinators.common.StringParser.character;
-import static jcombinators.common.StringParser.regex;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -34,7 +30,7 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void repeat1FailureNoMatchTest() {
         Parser<List<Character>> parser = character('a').repeat1();
-        assertFailure(parser, "syntax error in Test 'repeat1FailureNoMatchTest' at line 1 and character 1: unexpected character 'b', expected the literal 'a'", "b");
+        assertFailure(parser, "syntax error in Test 'repeat1FailureNoMatchTest' at line 1 and column 1: unexpected character 'b', expected the literal 'a'", "b");
     }
 
     @Test
@@ -46,7 +42,7 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void repeat1EmptyInputTest() {
         Parser<List<Character>> parser = character('a').repeat1();
-        assertFailure(parser, "syntax error in Test 'repeat1EmptyInputTest' at line 1 and character 1: unexpected end of input, expected the literal 'a'", "");
+        assertFailure(parser, "syntax error in Test 'repeat1EmptyInputTest' at line 1 and column 1: unexpected end of input, expected the literal 'a'", "");
     }
 
     @Test
@@ -64,7 +60,7 @@ public final class CombinatorTest extends ParserTest {
         Parser<Character> second = character('b');
         Parser<Character> parser = first.keepRight(second);
 
-        assertFailure(parser, "syntax error in Test 'keepRightFailureTest' at line 1 and character 2: unexpected character 'c', expected the literal 'b'", "ac");
+        assertFailure(parser, "syntax error in Test 'keepRightFailureTest' at line 1 and column 2: unexpected character 'c', expected the literal 'b'", "ac");
     }
 
     @Test
@@ -82,7 +78,7 @@ public final class CombinatorTest extends ParserTest {
         Parser<Character> second = character('b');
         Parser<Character> parser = first.keepLeft(second);
 
-        assertFailure(parser, "syntax error in Test 'keepLeftFailureTest' at line 1 and character 2: unexpected character 'c', expected the literal 'b'", "ac");
+        assertFailure(parser, "syntax error in Test 'keepLeftFailureTest' at line 1 and column 2: unexpected character 'c', expected the literal 'b'", "ac");
     }
 
     @Test
@@ -100,7 +96,7 @@ public final class CombinatorTest extends ParserTest {
         Parser<Character> second = character('b');
         Parser<Tuple<Character, Character>> parser = first.and(second);
 
-        assertFailure(parser, "syntax error in Test 'andFailureTest' at line 1 and character 2: unexpected character 'c', expected the literal 'b'", "ac");
+        assertFailure(parser, "syntax error in Test 'andFailureTest' at line 1 and column 2: unexpected character 'c', expected the literal 'b'", "ac");
     }
 
     @Test
@@ -112,7 +108,7 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void notFailureTest() {
         final Parser<Void> parser = character('a').not();
-        assertFailure(parser, "syntax error in Test 'notFailureTest' at line 1 and character 1: unexpected character 'a', expected anything but the literal 'a'", "a");
+        assertFailure(parser, "syntax error in Test 'notFailureTest' at line 1 and column 1: unexpected character 'a', expected anything but the literal 'a'", "a");
     }
 
     @Test
@@ -161,15 +157,15 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void separate1FailureTest() {
         final Parser<List<Character>> parser = character('a').separate1(character(','));
-        assertFailure(parser, "syntax error in Test 'separate1FailureTest' at line 1 and character 1: unexpected end of input, expected the literal 'a'", "");
-        assertFailure(parser, "syntax error in Test 'separate1FailureTest' at line 1 and character 1: unexpected character 'b', expected the literal 'a'", "b");
+        assertFailure(parser, "syntax error in Test 'separate1FailureTest' at line 1 and column 1: unexpected end of input, expected the literal 'a'", "");
+        assertFailure(parser, "syntax error in Test 'separate1FailureTest' at line 1 and column 1: unexpected character 'b', expected the literal 'a'", "b");
     }
 
     @Test
     public void chainLeftSuccessTest() {
         final Parser<Integer> number = regex("[0-9]").map(Integer::parseInt);
         final Parser<BiFunction<Integer, Integer, Integer>> plus = character('+').map(op -> Integer::sum);
-        final Parser<Integer> parser = Parser.chainLeft1(number, plus);
+        final Parser<Integer> parser = chainLeft1(number, plus);
 
         assertSuccess(parser, 6, "1+2+3");
     }
@@ -178,26 +174,26 @@ public final class CombinatorTest extends ParserTest {
     public void chainRightSuccessTest() {
         final Parser<Integer> number = regex("[0-9]").map(Integer::parseInt);
         final Parser<BiFunction<Integer, Integer, Integer>> exponent = character('^').map(op -> (a, b) -> (int) Math.pow(a, b));
-        final Parser<Integer> parser = Parser.chainRight1(number, exponent);
+        final Parser<Integer> parser = chainRight1(number, exponent);
 
         assertSuccess(parser, 2, "2^3^0");
     }
 
     @Test
     public void successParserTest() {
-        final Parser<String> parser = Parser.success("ok");
+        final Parser<String> parser = success(() -> "ok");
         assertSuccess(parser, "ok", "anything");
     }
 
     @Test
-    public void failParserTest() {
-        final Parser<String> parser = Parser.fail("error");
+    public void errorParserTest() {
+        final Parser<String> parser = error("error");
         assertFailure(parser, "error", "anything");
     }
 
     @Test
     public void abortParserTest() {
-        Parser<String> parser = Parser.abort("abort");
+        Parser<String> parser = abort("abort");
         assertFailure(parser, "abort", "anything");
     }
 
@@ -210,7 +206,7 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void commitFailureTest() {
         Parser<Character> parser = character('a').commit();
-        assertFailure(parser, "syntax error in Test 'commitFailureTest' at line 1 and character 1: unexpected character 'b', expected the literal 'a'", "b");
+        assertFailure(parser, "syntax error in Test 'commitFailureTest' at line 1 and column 1: unexpected character 'b', expected the literal 'a'", "b");
     }
 
     @Test
@@ -222,13 +218,13 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void commitChoiceNoBacktrackingTest() {
         Parser<Character> parser = character('a').commit().or(character('b'));
-        assertFailure(parser, "syntax error in Test 'commitChoiceNoBacktrackingTest' at line 1 and character 1: unexpected character 'b', expected the literal 'a'", "b");
+        assertFailure(parser, "syntax error in Test 'commitChoiceNoBacktrackingTest' at line 1 and column 1: unexpected character 'b', expected the literal 'a'", "b");
     }
 
     @Test
     public void positionParserCorrectPositionTest() {
         final String contents = "line1\nline2\nline3\n";
-        final Input input = Input.of("test", contents);
+        final Input<Character> input = Input.of("test", contents);
 
         final Parser<Function<Position, String>> parser = regex("line[0-9]\n").map(ignore -> position -> position.line + ":" + position.column);
 

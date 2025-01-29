@@ -1,12 +1,9 @@
 package jcombinators.primitive;
 
-import jcombinators.Parser;
 import jcombinators.ParserTest;
 import org.junit.Test;
 
 import java.util.List;
-
-import static jcombinators.common.StringParser.regex;
 
 public final class RepeatTest extends ParserTest {
 

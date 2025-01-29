@@ -3,11 +3,11 @@ package jcombinators.description;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public final class Regex extends Description {
+public final class RegExp extends Description {
 
     public final Pattern pattern;
 
-    public Regex(final Pattern pattern) {
+    public RegExp(final Pattern pattern) {
         this.pattern = pattern;
     }
 
