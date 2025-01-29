@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.github.bjoernloetters</groupId>
         <artifactId>jcombinators</artifactId>
-        <version>1.5.0-alpha</version>
+        <version>1.6.0-alpha</version>
     </parent>
 
     <artifactId>jcombinators-documentation</artifactId>
