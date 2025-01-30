@@ -312,17 +312,16 @@ public abstract class Parsing<I> {
     /**
      * The abstract base class of a {@link Parser}.
      * <br/><br/>
-     * Very similar to recursive descent parsing, a {@link Parser} is just a {@link Function} that takes an
-     * {@link Input} and produces a {@link Result}. That is to say, in order to implement a {@link Parser} it
-     * suffices to create an anonymous class that extends this class, implementing the {@link Parser#apply}
-     * method.
-     *
-     * @implNote Unfortunately, Java does not support instance interfaces which is why this class is not a
+     * Very similar to recursive descent parsing, a {@link Parser} is just a {@link Function} that takes an {@link Input}
+     * and produces a {@link Result}. In order to implement a {@link Parser} it therefore suffices to implement the
+     * {@link Parser#apply} method.
+     * <br/><br/>
+     * <b>Implementation Note</b>: Unfortunately, Java does not support instance interfaces which is why this class is not a
      * {@link FunctionalInterface} and we cannot use the lambda syntax to implement a {@link Parser}.
      *
      * @author Björn Lötters
      *
-     * @param <T> The type of the value that is the result of running this parser.
+     * @param <T> The type of the value that is the result of running this {@link Parser}.
      */
     public abstract class Parser<T> implements Function<Input<I>, Result<T>> {
 
@@ -334,6 +333,15 @@ public abstract class Parsing<I> {
         @Override
         public abstract Result<T> apply(final Input<I> input);
 
+        /**
+         * This method shall return a {@link Description} for this {@link Parser} which provides details about the shape
+         * of the {@link Input} this {@link Parser} expects. By default, this method returns an {@link Empty} {@link Description}
+         * and must hence be overwritten if required.
+         *
+         * @return A {@link Description} of this {@link Parser}.
+         *
+         * @see Description
+         */
         public Description description() {
             return new Empty();
         }

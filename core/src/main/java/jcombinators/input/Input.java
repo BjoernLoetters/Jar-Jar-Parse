@@ -1,22 +1,23 @@
 package jcombinators.input;
 
+import jcombinators.Parsing.Parser;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.Array;
-import java.util.*;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import jcombinators.Parsing.Parser;
-
 /**
- * An abstract representation of an {@link Input} for parsing. In most cases, this will be a {@link CharInputOld}, which is
- * an {@link Input} of {@link Character} and can be considered a sequence of characters (just like a {@link String}).
+ * An abstract representation of an {@link Input} for parsing. In most cases, this will be a {@link CharacterInput}, which
+ * is an {@link Input} of {@link Character}s and can be considered a sequence of characters (just like a {@link String}).
  * @param <T> The element type for this {@link Input}. In most cases this type equals {@link Character}.
  *
  * @see Parser
@@ -196,6 +197,7 @@ public abstract class Input<T> {
      * @param stream The underlying source for this {@link Input}.
      * @param charset The {@link Charset} that shall be used to decode the {@link InputStream}.
      * @return An {@link Input} of {@link Character}s that is based on the underlying {@link InputStream}.
+     * @throws IOException If reading from the {@link InputStream} fails.
      */
     public static Input<Character> of(final String name, final InputStream stream, final Charset charset) throws IOException {
         final byte[] bytes = stream.readAllBytes();
@@ -208,6 +210,7 @@ public abstract class Input<T> {
      *             used as the name for the {@link Input}.
      * @param charset The {@link Charset} that shall be used to decode the file denoted by the provided {@link Path}.
      * @return An {@link Input} of {@link Character}s that is based on the underlying file contents.
+     * @throws IOException If reading the file contents denoted by the {@link Path} fails.
      */
     public static Input<Character> of(final Path path, final Charset charset) throws IOException {
         final byte[] bytes = Files.readAllBytes(path);

@@ -2,7 +2,6 @@ package jcombinators;
 
 import jcombinators.data.Product;
 import jcombinators.input.Input;
-import jcombinators.position.Position;
 import org.junit.Test;
 
 import java.util.List;
@@ -226,21 +225,21 @@ public final class CombinatorTest extends ParserTest {
         final String contents = "line1\nline2\nline3\n";
         final Input<Character> input = Input.of("test", contents);
 
-        final Parser<Function<Position, String>> parser = regex("line[0-9]\n").map(ignore -> position -> position.line + ":" + position.column);
+        final Parser<Function<Input<Character>.Position, String>> parser = regex("line[0-9]\n").map(ignore -> position -> position.toString());
 
         final Parser<String> positionParser = position(parser);
         final Result<String> firstResult = positionParser.apply(input);
 
         assertTrue(firstResult.isSuccess());
-        assertEquals("1:1", firstResult.get().get());
+        assertEquals("position 1:1", firstResult.get().get());
 
         final Result<String> secondResult = positionParser.apply(firstResult.rest);
         assertTrue(secondResult.isSuccess());
-        assertEquals("2:1", secondResult.get().get());
+        assertEquals("position 2:1", secondResult.get().get());
 
         final Result<String> thirdResult = positionParser.apply(secondResult.rest);
         assertTrue(thirdResult.isSuccess());
-        assertEquals("3:1", thirdResult.get().get());
+        assertEquals("position 3:1", thirdResult.get().get());
     }
 
 }

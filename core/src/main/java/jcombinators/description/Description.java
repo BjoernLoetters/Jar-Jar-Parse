@@ -6,14 +6,61 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import jcombinators.Parsing.Parser;
+import jcombinators.Parsing.Failure;
+
+/**
+ * The base class for all kinds of {@link Parser} {@link Description}s.
+ * <br/><br/>
+ * A {@link Description} describes the expectation of a {@link Parser} and can be used to generate more informative
+ * error messages in case of a {@link Failure}. The following kinds of {@link Description}s are supported:
+ * <ul>
+ *     <li>{@link Literal}: A {@link Description} describing that a specific {@link String} literal was expected.</li>
+ *     <li>{@link RegExp}: A {@link Description} describing that a specific {@link Pattern} was expected.</li>
+ *     <li>{@link Choice}: A {@link Description} that represents a choice between other {@link Description}s.</li>
+ *     <li>{@link Sequence}: A {@link Description} that represents a sequence of other {@link Description}s.</li>
+ *     <li>{@link Negation}: A {@link Description} that negates another {@link Description}.</li>
+ *     <li>{@link Empty}: An empty {@link Description} that does not provide further information.</li>
+ * </ul>
+ *
+ * @see Choice
+ * @see Literal
+ * @see Negation
+ * @see RegExp
+ * @see Sequence
+ * @see Empty
+ * @see Parser
+ *
+ * @author Björn Lötters
+ */
 public sealed abstract class Description permits Choice, Literal, Negation, RegExp, Sequence, Empty {
 
+    /**
+     * Produces a {@link String} that explains what a corresponding {@link Parser} would expect according to this
+     * {@link Description}.
+     * @return An {@link Optional} {@link String} where {@link Optional#empty()} is returned in case this
+     *         {@link Description} is {@link Empty}.
+     */
     public abstract Optional<String> describe();
 
+    /**
+     * Normalizes this {@link Description} such that {@link Negation}s are propagated downwards to the individual
+     * {@link Literal} and {@link RegExp} {@link Description}s. Moreover, {@link Choice}s of {@link RegExp}s are
+     * summarized into a single {@link RegExp}.
+     * @return The normalized {@link Description}.
+     */
     public final Description normalize() {
         return normalize(this, false);
     }
 
+    /**
+     * Normalizes the provided {@link Description} such that {@link Negation}s are propagated downwards to the individual
+     * {@link Literal} and {@link RegExp} {@link Description}s. Moreover, {@link Choice}s of {@link RegExp}s are
+     * summarized into a single {@link RegExp}.
+     * @param description The {@link Description} that shall be normalized.
+     * @param negate Whether the provided {@link Description} should be negated or not.
+     * @return The normalized {@link Description}.
+     */
     private static Description normalize(final Description description, final boolean negate) {
         switch (description) {
             case Choice choice: {
@@ -55,6 +102,12 @@ public sealed abstract class Description permits Choice, Literal, Negation, RegE
         }
     }
 
+    /**
+     * Collects nested {@link Choice}s into a single {@link List} of {@link Description}s.
+     * @param choice The {@link Choice} whose {@link Description}s should be collected.
+     * @param alternatives The {@link List} to which the individual {@link Description}s should be added.
+     * @return The provided {@link List}.
+     */
     private static List<Description> collect(final Choice choice, final List<Description> alternatives) {
         for (final Description alternative : choice.alternatives) {
             if (alternative instanceof Choice other) {
@@ -67,6 +120,12 @@ public sealed abstract class Description permits Choice, Literal, Negation, RegE
         return alternatives;
     }
 
+    /**
+     * Collects nested {@link Sequence}s into a single {@link List} of {@link Description}s.
+     * @param sequence The {@link Sequence} whose {@link Description}s should be collected.
+     * @param elements The {@link List} to which the individual {@link Description}s should be added.
+     * @return The provided {@link List}.
+     */
     private static List<Description> collect(final Sequence sequence, final List<Description> elements) {
         for (final Description element : sequence.elements) {
             if (element instanceof Sequence other) {
@@ -79,14 +138,28 @@ public sealed abstract class Description permits Choice, Literal, Negation, RegE
         return elements;
     }
 
+    /**
+     * Creates a new {@link Description} by creating a {@link Sequence} from {@code this} and the provided {@link Description}.
+     * @param description The second {@link Description}.
+     * @return A {@link Sequence} {@link Description} containing {@code this} and the provided {@link Description} in this order.
+     */
     public final Description and(final Description description) {
         return new Sequence(List.of(this, description));
     }
 
+    /**
+     * Creates a new {@link Description} by creating a {@link Choice} from {@code this} and the provided {@link Description}.
+     * @param alternative The alternative {@link Description}.
+     * @return A {@link Choice} {@link Description} containing {@code this} and the provided {@link Description} in this order.
+     */
     public final Description or(final Description alternative) {
         return new Choice(List.of(this, alternative));
     }
 
+    /**
+     * Creates a new {@link Description} by creating a {@link Negation} from {@code this} {@link Description}.
+     * @return A {@link Negation} of {@code this} {@link Description}.
+     */
     public final Description negate() {
         return new Negation(this);
     }

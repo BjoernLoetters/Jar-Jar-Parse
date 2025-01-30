@@ -1,6 +1,10 @@
 package jcombinators.input;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * A specific implementation of an {@link Input} for {@link Character}s that also implements the {@link CharSequence}
@@ -25,6 +29,15 @@ public final class CharacterInput extends Input<Character> implements CharSequen
 
     private final int length;
 
+    /**
+     * Constructs a new {@link CharacterInput}.
+     * @param name A human-readable name for this {@link CharacterInput}.
+     * @param sequence The underlying {@link CharSequence} for this {@link CharacterInput}.
+     * @param offset An offset in characters that denotes the start of a subsequence in the provided {@link CharSequence}.
+     * @param length The length of the subsequence that is denoted by the offset.
+     * @param lines A cache of line offsets, which is used to compute the line and column numbers in unicode code points
+     *              on basis of the character offset.
+     */
     CharacterInput(final String name, final CharSequence sequence, final int offset, final int length, final int[] lines) {
         super(name);
         this.sequence = sequence;
@@ -88,10 +101,11 @@ public final class CharacterInput extends Input<Character> implements CharSequen
     }
 
     /**
-     * TODO:
-     *  1. Add more JavaDoc documentation
-     *  2. Implement RegExpParser for arbitrary Input<Character> and not only CharacterInputs
-     *  3. Implement a "skip" method that skips a prefix only (filter is probably too progressive)
+     * Represents a {@link Position} in this {@link CharacterInput} that is aware of the underlying unicode code points.
+     *
+     * @see Position
+     * @see Character
+     *
      * @author Björn Lötters
      */
     public final class CodePointPosition extends Position {
@@ -101,14 +115,24 @@ public final class CharacterInput extends Input<Character> implements CharSequen
          * @param offset The offset of this {@link CodePointPosition}. An offset is the number of characters that must
          *               be skipped in the underlying {@link CharacterInput} in order to reach this {@link CodePointPosition}.
          */
-        public CodePointPosition(final int offset) {
+        private CodePointPosition(final int offset) {
             super(offset);
         }
 
+        /**
+         * Returns the code point that occurs in the associated {@link CharacterInput} at this {@link CodePointPosition}.
+         * @return The unicode code point at this {@link CodePointPosition}.
+         */
         public int getCodePoint() {
             return Character.codePointAt(sequence, offset);
         }
 
+        /**
+         * Computes the line number that corresponds to this {@link CodePointPosition} as it is perceived by the user.
+         * That is to say, this is not necessarily the character offset in this {@link CodePointPosition} but the
+         * unicode code point offset.
+         * @return The line number of this {@link CodePointPosition}.
+         */
         public int getLineNumber() {
             // Here, we do a binary search to find the index of the line number that corresponds to the offset of this position.
             int lower = 0;
@@ -131,20 +155,31 @@ public final class CharacterInput extends Input<Character> implements CharSequen
             return lower + 1;
         }
 
+        /**
+         * Computes the column number that corresponds to this {@link CodePointPosition} as it is perceived by the user.
+         * That is to say, this is not necessarily the character offset in this {@link CodePointPosition} but the
+         * unicode code point offset relative to the corresponding line offset.
+         * @return The column number of this {@link CodePointPosition}.
+         */
         public int getColumnNumber() {
-            final int lineOffset = lines[getLineNumber() - 1];
+            final int lineNumber = getLineNumber() - 1;
+            final int lineOffset = lineNumber < lines.length ? lines[lineNumber] : 0;
             // We add 1 here, since column numbers usually start at 1 and not 0.
             return offset - lineOffset + 1;
         }
 
         @Override
         public String describe() {
-            return String.format("character '%s'", Character.toString(getCodePoint()));
+            if (offset >= CharacterInput.this.sequence.length()) {
+                return "end of input";
+            } else {
+                return String.format("character '%s'", Character.toString(getCodePoint()));
+            }
         }
 
         @Override
         public String toString() {
-            return String.format("position %d:%d", getLineNumber(), getColumnNumber());
+            return String.format("%s at line %d and column %d", name, getLineNumber(), getColumnNumber());
         }
 
     }
