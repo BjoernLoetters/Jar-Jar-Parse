@@ -1,6 +1,6 @@
 package jcombinators;
 
-import jcombinators.data.Tuple;
+import jcombinators.data.Product;
 import jcombinators.input.Input;
 import jcombinators.position.Position;
 import org.junit.Test;
@@ -85,16 +85,16 @@ public final class CombinatorTest extends ParserTest {
     public void andSuccessTest() {
         Parser<Character> first = character('a');
         Parser<Character> second = character('b');
-        Parser<Tuple<Character, Character>> parser = first.and(second);
+        Parser<Product<Character, Character>> parser = first.and(second);
 
-        assertSuccess(parser, new Tuple<>('a', 'b'), "ab");
+        assertSuccess(parser, new Product<>('a', 'b'), "ab");
     }
 
     @Test
     public void andFailureTest() {
         Parser<Character> first = character('a');
         Parser<Character> second = character('b');
-        Parser<Tuple<Character, Character>> parser = first.and(second);
+        Parser<Product<Character, Character>> parser = first.and(second);
 
         assertFailure(parser, "syntax error in Test 'andFailureTest' at line 1 and column 2: unexpected character 'c', expected the literal 'b'", "ac");
     }
@@ -144,8 +144,8 @@ public final class CombinatorTest extends ParserTest {
 
     @Test
     public void separateTrailing2Test() {
-        final Parser<Tuple<List<Character>, Character>> parser = character('a').separate(character(',')).and(character(','));
-        assertSuccess(parser, new Tuple<>(List.of('a', 'a'), ','), "a,a,");
+        final Parser<Product<List<Character>, Character>> parser = character('a').separate(character(',')).and(character(','));
+        assertSuccess(parser, new Product<>(List.of('a', 'a'), ','), "a,a,");
     }
 
     @Test
@@ -211,8 +211,8 @@ public final class CombinatorTest extends ParserTest {
 
     @Test
     public void commitChainedParserTest() {
-        Parser<Tuple<Character, Character>> parser = character('a').commit().and(character('b'));
-        assertSuccess(parser, new Tuple<>('a', 'b'), "ab");
+        Parser<Product<Character, Character>> parser = character('a').commit().and(character('b'));
+        assertSuccess(parser, new Product<>('a', 'b'), "ab");
     }
 
     @Test

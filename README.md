@@ -45,7 +45,7 @@ public class MyParser extends StringParsing {
 
     // A parser which parses additions.
     public Parser<Integer> add = number.keepLeft(character('+')).and(number)
-            .map(tuple -> tuple.first() + tuple.second());
+            .map(product -> product.first() + product.second());
 
     public static void main(final String[] arguments) {
         // Create an input of characters with the name 'My Test Input' (for error reporting).

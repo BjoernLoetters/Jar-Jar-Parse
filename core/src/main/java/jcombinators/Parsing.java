@@ -1,11 +1,10 @@
 package jcombinators;
 
-import jcombinators.data.Tuple;
+import jcombinators.data.Product;
 import jcombinators.description.Choice;
 import jcombinators.description.Description;
 import jcombinators.description.Empty;
 import jcombinators.input.Input;
-import jcombinators.position.Position;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -248,9 +247,9 @@ public abstract class Parsing<I> {
         public static String format(final Input<?> input, final Description description) {
             final Optional<String> expected = description.normalize().describe();
             if (expected.isEmpty()) {
-                return String.format("syntax error in %s: unexpected %s", input.position(), input.describe());
+                return String.format("syntax error in %s: unexpected %s", input.position(), input.position().describe());
             } else {
-                return String.format("syntax error in %s: unexpected %s, expected %s", input.position(), input.describe(), expected.get());
+                return String.format("syntax error in %s: unexpected %s, expected %s", input.position(), input.position().describe(), expected.get());
             }
         }
 
@@ -362,8 +361,8 @@ public abstract class Parsing<I> {
             return new FlatMapParser<T, U>(this, function);
         }
 
-        public final <U> Parser<Tuple<T, U>> and(final Parser<U> right) {
-            return flatMap(first -> right.map(second -> new Tuple<>(first, second)));
+        public final <U> Parser<Product<T, U>> and(final Parser<U> right) {
+            return flatMap(first -> right.map(second -> new Product<>(first, second)));
         }
 
         public final <U> Parser<T> keepLeft(final Parser<U> right) {
@@ -387,11 +386,11 @@ public abstract class Parsing<I> {
         }
 
         public final Parser<List<T>> repeat1() {
-            return this.and(repeat()).map(tuple -> tuple.map(Stream::of, List::stream).fold(Stream::concat).toList());
+            return this.and(repeat()).map(product -> product.map(Stream::of, List::stream).fold(Stream::concat).toList());
         }
 
         public final Parser<List<T>> separate1(final Parser<?> separator) {
-            return this.and(separator.and(this).repeat()).map(tuple -> tuple.map(Stream::of, list -> list.stream().map(Tuple::second)).fold(Stream::concat).toList());
+            return this.and(separator.and(this).repeat()).map(product -> product.map(Stream::of, list -> list.stream().map(Product::second)).fold(Stream::concat).toList());
         }
 
         public final Parser<List<T>> separate(final Parser<?> separator) {
@@ -422,11 +421,10 @@ public abstract class Parsing<I> {
         final Result<T> result = parser.apply(input);
 
         if (result.isSuccess()) {
-            final Input<I> rest = result.rest.skip();
-            if (rest.isEmpty()) {
-                return new Success<>(result.getOrFail(), rest);
+            if (result.rest.isEmpty()) {
+                return new Success<>(result.getOrFail(), result.rest);
             } else {
-                return new Error<>(Failure.format(rest, new Empty()), rest);
+                return new Error<>(Failure.format(result.rest, new Empty()), result.rest);
             }
         } else {
             return result;
@@ -494,10 +492,10 @@ public abstract class Parsing<I> {
     }
 
     public <T> Parser<T> chainLeft1(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
-        return element.and(separator.and(element).repeat()).map(tuple -> {
-            T result = tuple.first();
+        return element.and(separator.and(element).repeat()).map(product -> {
+            T result = product.first();
 
-            for (Tuple<BiFunction<T, T, T>, T> next : tuple.second()) {
+            for (Product<BiFunction<T, T, T>, T> next : product.second()) {
                 result = next.first().apply(result, next.second());
             }
 
@@ -510,24 +508,24 @@ public abstract class Parsing<I> {
     }
 
     public <T> Parser<T> chainRight1(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
-        return element.and(separator.and(element).repeat()).map(tuple -> {
-            if (tuple.second().isEmpty()) {
-                return tuple.first();
+        return element.and(separator.and(element).repeat()).map(product -> {
+            if (product.second().isEmpty()) {
+                return product.first();
             } else {
-                final List<Tuple<BiFunction<T, T, T>, T>> reversed = tuple.second().reversed();
-                final Iterator<Tuple<BiFunction<T, T, T>, T>> iterator = reversed.iterator();
+                final List<Product<BiFunction<T, T, T>, T>> reversed = product.second().reversed();
+                final Iterator<Product<BiFunction<T, T, T>, T>> iterator = reversed.iterator();
 
-                final Tuple<BiFunction<T, T, T>, T> first = iterator.next();
+                final Product<BiFunction<T, T, T>, T> first = iterator.next();
                 T result = first.second();
                 BiFunction<T, T, T> combiner = first.first();
 
                 while (iterator.hasNext()) {
-                    final Tuple<BiFunction<T, T, T>, T> next = iterator.next();
+                    final Product<BiFunction<T, T, T>, T> next = iterator.next();
                     result = combiner.apply(next.second(), result);
                     combiner = next.first();
                 }
 
-                result = combiner.apply(tuple.first(), result);
+                result = combiner.apply(product.first(), result);
                 return result;
             }
         });
@@ -537,7 +535,7 @@ public abstract class Parsing<I> {
         return chainRight1(element, separator).optional().map(result -> result.orElse(otherwise));
     }
 
-    public final <T> Parser<T> position(final Parser<Function<Position, T>> parser) {
+    public final <T> Parser<T> position(final Parser<Function<Input<I>.Position, T>> parser) {
         return new PositionParser<>(parser);
     }
 
@@ -697,9 +695,9 @@ public abstract class Parsing<I> {
 
     private final class PositionParser<T> extends Parser<T> {
 
-        private final Parser<Function<Position, T>> parser;
+        private final Parser<Function<Input<I>.Position, T>> parser;
 
-        private PositionParser(final Parser<Function<Position, T>> parser) {
+        private PositionParser(final Parser<Function<Input<I>.Position, T>> parser) {
             this.parser = parser;
         }
 
@@ -710,7 +708,7 @@ public abstract class Parsing<I> {
 
         @Override
         public Result<T> apply(final Input<I> input) {
-            final Position position = input.position();
+            final Input<I>.Position position = input.position();
             return parser.apply(input).map(function -> function.apply(position));
         }
 
@@ -776,7 +774,7 @@ public abstract class Parsing<I> {
 
         @Override
         public Result<T> apply(final Input<I> input) {
-            System.out.printf("trying '%s' in %s (%s)\n", name, input.position(), input.describe());
+            System.out.printf("trying '%s' in %s (%s)\n", name, input.position(), input.position().describe());
             final Result<T> result = parser.apply(input);
             return switch (result) {
                 case Success<T> success -> {

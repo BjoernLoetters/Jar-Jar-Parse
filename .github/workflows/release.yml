@@ -29,6 +29,9 @@ jobs:
       - name: Build JAR-File
         run: mvn clean package -DskipTests
 
+      - name: Generate JavaDoc
+        run: mvn javadoc:jar
+
       - name: Upload Release
         uses: marvinpinto/action-automatic-releases@latest
         with:
@@ -38,4 +41,5 @@ jobs:
           title: "Release ${{ github.ref_name }}"
           files: |
             LICENSE
+            core/target/*-javadoc.jar
             core/target/*.jar
