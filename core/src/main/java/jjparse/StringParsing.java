@@ -199,20 +199,30 @@ public abstract class StringParsing extends Parsing<Character> {
         public Result<String> apply(final Input<Character> input) {
             final Input<Character> skipped = skip(input);
 
-            final CharSequence sequence;
-            if (skipped instanceof CharacterInput characterInput) {
-                sequence = characterInput;
+            if (skipped instanceof CharacterInput sequence) {
+                final Matcher matcher = pattern.matcher(sequence);
+                if (matcher.lookingAt()) {
+                    final String value = matcher.group();
+                    return new Success<String>(value, sequence.subSequence(value.length(), sequence.length()));
+                } else {
+                    return new Error<String>(Failure.format(skipped, description()), skipped);
+                }
             } else {
-                sequence = new CharacterSequenceWrapper(input);
+                final CharacterSequenceWrapper sequence = new CharacterSequenceWrapper(skipped);
+                final Matcher matcher = pattern.matcher(sequence);
+                if (matcher.lookingAt()) {
+                    final String value = matcher.group();
+                    Input<Character> rest = skipped;
+                    for (int i = 0; i < value.length(); ++i) {
+                        rest = rest.tail();
+                    }
+                    return new Success<String>(value, rest);
+                } else {
+                    return new Error<String>(Failure.format(skipped, description()), skipped);
+                }
             }
 
-            final Matcher matcher = pattern.matcher(sequence);
-            if (matcher.lookingAt()) {
-                final String value = matcher.group();
-                return new Success<String>(value, sequence.subSequence(value.length(), sequence.length()));
-            } else {
-                return new Error<String>(Failure.format(sequence, description()), sequence);
-            }
+
         }
 
     }
