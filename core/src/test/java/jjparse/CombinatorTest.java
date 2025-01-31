@@ -1,7 +1,7 @@
-package jcombinators;
+package jjparse;
 
-import jcombinators.data.Product;
-import jcombinators.input.Input;
+import jjparse.data.Product;
+import jjparse.input.Input;
 import org.junit.Test;
 
 import java.util.List;
@@ -222,24 +222,58 @@ public final class CombinatorTest extends ParserTest {
 
     @Test
     public void positionParserCorrectPositionTest() {
-        final String contents = "line1\nline2\nline3\n";
-        final Input<Character> input = Input.of("test", contents);
+        final String contents = "line1 column1\n line2\n    column3  line3\n";
+        final Input<Character> input = Input.of("Test '" + getTestName() + "'", contents);
 
-        final Parser<Function<Input<Character>.Position, String>> parser = regex("line[0-9]\n").map(ignore -> position -> position.toString());
+        final Parser<Function<Input<Character>.Position, String>> parser = regex("line[0-9]|column[0-9]").map(ignore -> position -> position.toString());
 
         final Parser<String> positionParser = position(parser);
         final Result<String> firstResult = positionParser.apply(input);
 
         assertTrue(firstResult.isSuccess());
-        assertEquals("position 1:1", firstResult.get().get());
+        assertEquals("Test 'positionParserCorrectPositionTest' at line 1 and column 1", firstResult.get().get());
 
         final Result<String> secondResult = positionParser.apply(firstResult.rest);
         assertTrue(secondResult.isSuccess());
-        assertEquals("position 2:1", secondResult.get().get());
+        assertEquals("Test 'positionParserCorrectPositionTest' at line 1 and column 7", secondResult.get().get());
 
         final Result<String> thirdResult = positionParser.apply(secondResult.rest);
         assertTrue(thirdResult.isSuccess());
-        assertEquals("position 3:1", thirdResult.get().get());
+        assertEquals("Test 'positionParserCorrectPositionTest' at line 2 and column 2", thirdResult.get().get());
+
+        final Result<String> fourthResult = positionParser.apply(thirdResult.rest);
+        assertTrue(fourthResult.isSuccess());
+        assertEquals("Test 'positionParserCorrectPositionTest' at line 3 and column 5", fourthResult.get().get());
+
+        final Result<String> fifthResult = positionParser.apply(fourthResult.rest);
+        assertTrue(fifthResult.isSuccess());
+        assertEquals("Test 'positionParserCorrectPositionTest' at line 3 and column 14", fifthResult.get().get());
+    }
+
+    @Test
+    public void positionParserCorrectCodePointPositionTest() {
+        final String contents = "😀🙂\n  🙂😀";
+        final Input<Character> input = Input.of("Test '" + getTestName() + "'", contents);
+
+        final Parser<Function<Input<Character>.Position, String>> parser = regex("😀|🙂").map(ignore -> position -> position.toString());
+
+        final Parser<String> positionParser = position(parser);
+        final Result<String> firstResult = positionParser.apply(input);
+
+        assertTrue(firstResult.isSuccess());
+        assertEquals("Test 'positionParserCorrectCodePointPositionTest' at line 1 and column 1", firstResult.get().get());
+
+        final Result<String> secondResult = positionParser.apply(firstResult.rest);
+        assertTrue(secondResult.isSuccess());
+        assertEquals("Test 'positionParserCorrectCodePointPositionTest' at line 1 and column 2", secondResult.get().get());
+
+        final Result<String> thirdResult = positionParser.apply(secondResult.rest);
+        assertTrue(thirdResult.isSuccess());
+        assertEquals("Test 'positionParserCorrectCodePointPositionTest' at line 2 and column 3", thirdResult.get().get());
+
+        final Result<String> fourthResult = positionParser.apply(thirdResult.rest);
+        assertTrue(fourthResult.isSuccess());
+        assertEquals("Test 'positionParserCorrectCodePointPositionTest' at line 2 and column 4", fourthResult.get().get());
     }
 
 }

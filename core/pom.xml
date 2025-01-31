@@ -6,11 +6,11 @@
 
     <parent>
         <groupId>io.github.bjoernloetters</groupId>
-        <artifactId>jcombinators</artifactId>
+        <artifactId>jjparse</artifactId>
         <version>1.6.0-alpha</version>
     </parent>
 
-    <artifactId>jcombinators-core</artifactId>
+    <artifactId>jjparse-core</artifactId>
     <packaging>jar</packaging>
 
     <build>

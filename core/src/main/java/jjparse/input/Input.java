@@ -1,6 +1,6 @@
-package jcombinators.input;
+package jjparse.input;
 
-import jcombinators.Parsing.Parser;
+import jjparse.Parsing.Parser;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -89,6 +89,21 @@ public abstract class Input<T> {
      */
     public final Input<T> filter(final Predicate<T> predicate) {
         return new FilterInput<>(this, predicate);
+    }
+
+    /**
+     * Skips the leading elements of this {@link Input} as long as the provided {@link Predicate} holds.
+     * @param predicate The {@link Predicate} that indicates whether an element shall be skipped or not. 
+     * @return The remaining {@link Input} after skipping the leading elements of this {@link Input}.
+     */
+    public final Input<T> skip(final Predicate<T> predicate) {
+        Input<T> input = this;
+
+        while (input.nonEmpty() && predicate.test(input.head())) {
+            input = input.tail();
+        }
+
+        return input;
     }
 
     /**
@@ -186,7 +201,7 @@ public abstract class Input<T> {
      * @param <T> The element type of the {@link Input} and the {@link Stream}.
      */
     public static <T> Input<T> of(final String name, final Stream<T> stream) {
-        return new StreamInput<>(name, stream);
+        return new StreamInput<>(name, stream, 0);
     }
 
     /**
@@ -236,9 +251,10 @@ public abstract class Input<T> {
      * @return An {@link Input} of {@link Character}s that is based on the underlying {@link CharSequence}.
      */
     public static Input<Character> of(final String name, final CharSequence sequence) {
-        final int[] lines = IntStream.range(1, sequence.length() + 1)
-            .filter(index -> sequence.charAt(index - 1) == '\n')
-            .toArray();
+        final int[] lines = IntStream.concat(
+            IntStream.of(0), // The offset of the first line is always 0
+            IntStream.range(1, sequence.length() + 1).filter(index -> sequence.charAt(index - 1) == '\n')
+        ).toArray();
 
         return new CharacterInput(name, sequence, 0, sequence.length(), lines);
     }

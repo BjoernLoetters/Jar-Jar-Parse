@@ -1,7 +1,7 @@
 package json;
 
-import jcombinators.StringParsing;
-import jcombinators.data.Product;
+import jjparse.StringParsing;
+import jjparse.data.Product;
 
 import java.util.stream.Collectors;
 

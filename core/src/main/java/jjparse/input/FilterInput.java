@@ -1,4 +1,4 @@
-package jcombinators.input;
+package jjparse.input;
 
 import java.util.function.Predicate;
 

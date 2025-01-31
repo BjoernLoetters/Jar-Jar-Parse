@@ -1,16 +1,20 @@
-package jcombinators;
+package jjparse;
 
-import jcombinators.description.Description;
-import jcombinators.description.Literal;
-import jcombinators.description.RegExp;
-import jcombinators.input.CharacterInput;
-import jcombinators.input.Input;
+import jjparse.description.Description;
+import jjparse.description.Literal;
+import jjparse.description.RegExp;
+import jjparse.input.CharacterInput;
+import jjparse.input.Input;
 
 import java.math.BigInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class StringParsing extends Parsing<Character> {
+
+    public StringParsing() {
+        setSkipParser(regex("\\s+"));
+    }
 
     /* *** Public Parser API *** */
 
@@ -62,22 +66,40 @@ public abstract class StringParsing extends Parsing<Character> {
         }
 
         @Override
-        public Result<String> apply(Input<Character> input) {
-            Input<Character> current = input;
-            int index = 0;
+        public Result<String> apply(final Input<Character> input) {
+            final Input<Character> skipped = skip(input);
 
+            Input<Character> current = skipped;
+            int index = 0;
             while (current.nonEmpty() && index < literal.length()) {
-                if (current.head() != literal.charAt(index)) {
-                    return new Error<String>(Failure.format(current, description()), input);
+                final int a;
+                final int b = literal.codePointAt(index);
+
+                // Read the full code point of this character input, such that error messages only capture full code points
+                final Input<Character> previous = current;
+                if (Character.isHighSurrogate(current.head())) {
+                    final Input<Character> temporary = current.tail();
+                    if (temporary.nonEmpty() && Character.isLowSurrogate(temporary.head())) {
+                        a = Character.toCodePoint(current.head(), temporary.head());
+                        current = temporary;
+                    } else {
+                        a = current.head();
+                    }
+                } else {
+                    a = current.head();
                 }
 
-                ++index;
+                if (a != b) {
+                    return new Error<String>(Failure.format(previous, description()), skipped);
+                }
+
+                index += Character.charCount(a);
                 current = current.tail();
             }
 
             if (index < literal.length()) {
                 // We hit the end of the input
-                return new Error<String>(Failure.format(current, description()), input);
+                return new Error<String>(Failure.format(current, description()), skipped);
             }
 
             return new Success<String>(literal, current);
@@ -99,8 +121,10 @@ public abstract class StringParsing extends Parsing<Character> {
         }
 
         @Override
-        public Result<String> apply(Input<Character> input) {
-            if (input instanceof CharacterInput sequence) {
+        public Result<String> apply(final Input<Character> input) {
+            final Input<Character> skipped = skip(input);
+
+            if (skipped instanceof CharacterInput sequence) {
                 final Matcher matcher = pattern.matcher(sequence);
                 if (matcher.lookingAt()) {
                     final String value = matcher.group();

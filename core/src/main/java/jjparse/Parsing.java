@@ -1,10 +1,10 @@
-package jcombinators;
+package jjparse;
 
-import jcombinators.data.Product;
-import jcombinators.description.Choice;
-import jcombinators.description.Description;
-import jcombinators.description.Empty;
-import jcombinators.input.Input;
+import jjparse.data.Product;
+import jjparse.description.Choice;
+import jjparse.description.Description;
+import jjparse.description.Empty;
+import jjparse.input.Input;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -418,65 +418,147 @@ public abstract class Parsing<I> {
         }
 
         public final Parser<T> log(final String name) {
-            return new LogParser(name, this);
+            return new LogParser<>(name, this);
         }
 
     }
 
+    /** The {@link Parser} used for skipping {@link Input} before applying another {@link Parser}. */
+    private Parser<Void> skip = success(() -> null);
+
+    /** A boolean flag that controls whether we are currently in skip mode and hence should not apply the skip {@link Parser} again. */
+    private boolean skipping = false;
+
     /* *** Public Parser API *** */
 
+    /**
+     * Attempts to parse the whole {@link Input} with the provided {@link Parser}. This method fails, if {@link Input}
+     * that cannot be skipped remains after applying the provided {@link Parser}.
+     * @param parser The {@link Parser} that should be applied to the {@link Input}.
+     * @param input The {@link Input} that should be parsed using the provided {@link Parser}.
+     * @return The {@link Result} after applying the provided {@link Parser} to the {@link Input}.
+     * @param <T> The type of the {@link Result}.
+     * @see #skip(Input)
+     * @see Parser
+     * @see Input
+     * @see Result
+     */
     public final <T> Result<T> parse(final Parser<T> parser, final Input<I> input) {
-        final Result<T> result = parser.apply(input);
+        final Result<T> result = parser.apply(skip(input));
 
         if (result.isSuccess()) {
-            if (result.rest.isEmpty()) {
-                return new Success<>(result.getOrFail(), result.rest);
+            final Input<I> rest = skip(result.rest);
+            if (rest.isEmpty()) {
+                return new Success<>(result.getOrFail(), rest);
             } else {
-                return new Error<>(Failure.format(result.rest, new Empty()), result.rest);
+                return new Error<>(Failure.format(rest, new Empty()), rest);
             }
         } else {
             return result;
         }
     }
 
+    /**
+     * Skips the prefix of the provided {@link Input} using the current skip {@link Parser}. This method does not fail,
+     * even if the skip {@link Parser} was not successful.
+     * @param input The {@link Input} whose prefix should be skipped.
+     * @return The {@link Input} that remains after skipping.
+     * @see #setSkipParser(Parser)
+     */
+    public final Input<I> skip(final Input<I> input) {
+        if (skipping) {
+            return input;
+        } else {
+            skipping = true;
+            try {
+                return skip.apply(input).rest;
+            } finally {
+                skipping = false;
+            }
+        }
+    }
+
+    /**
+     * Sets the {@link Parser} that is used for skipping {@link Input} before another {@link Parser} is applied. By
+     * default, no skip {@link Parser} is set and no {@link Input} is skipped.
+     * @param parser The new {@link Parser} that should be used for skipping. This {@link Parser} may fail, in which
+     *               case no {@link Input} is skipped.
+     * @param <T> The result type of the provided {@link Parser}, which is voided internally.
+     * @throws NullPointerException If the provided {@link Parser} is {@code null}.
+     * @see #skip(Input)
+     */
+    public final <T> void setSkipParser(final Parser<T> parser) throws NullPointerException {
+        if (parser == null) {
+            throw new NullPointerException();
+        } else {
+            skip = parser.map(ignore -> null);
+        }
+    }
+
+    /**
+     * Lifts the provided {@link Function} into a {@link Parser}. This allows us to use Java's lambda notation, despite
+     * that {@link Parser} must be an abstract class.
+     * @param function The {@link Function} that parses an {@link Input} and returns a {@link Result}.
+     * @return A {@link Parser} which behaves just like the provided {@link Function}.
+     * @param <T> The type of the {@link Result}.
+     * @see Parser
+     * @see Result
+     * @see Input
+     * @see Function
+     */
+    public final <T> Parser<T> lift(final Function<Input<I>, Result<T>> function) {
+        return new Parser<T>() {
+
+            @Override
+            public Result<T> apply(final Input<I> input) {
+                return function.apply(skip(input));
+            }
+
+        };
+    }
+
+    /**
+     * Constructs a {@link Parser} that always fails with an {@link Error}.
+     * @param message The message of the {@link Error}.
+     * @return A {@link Parser} that always fails with an {@link Error}.
+     * @param <T> The mandatory type of the {@link Result}.
+     */
     public final <T> Parser<T> error(final String message) {
-        return new Parser<T>() {
-
-            @Override
-            public Result<T> apply(final Input<I> input) {
-                return new Error<>(message, input);
-            }
-
-        };
+        return lift(input -> new Error<>(message, input));
     }
 
+    /**
+     * Constructs a {@link Parser} that always fails with an {@link Abort}.
+     * @param message The message of the {@link Abort}.
+     * @return A {@link Parser} that always fails with an {@link Abort}.
+     * @param <T> The mandatory type of the {@link Result}.
+     */
     public final <T> Parser<T> abort(final String message) {
-        return new Parser<T>() {
-
-            @Override
-            public Result<T> apply(final Input<I> input) {
-                return new Abort<>(message, input);
-            }
-
-        };
+        return lift(input -> new Abort<>(message, input));
     }
 
+    /**
+     * Constructs a {@link Parser} that always succeeds with a {@link Success}.
+     * @param supplier A {@link Supplier} for the value that should be returned by the {@link Parser}.
+     * @return A {@link Parser} that always succeeds with a {@link Success}.
+     * @param <T> The type of the value that should be returned by {@link Parser}.
+     */
     public final <T> Parser<T> success(final Supplier<T> supplier) {
-        return new Parser<T>() {
-
-            @Override
-            public Result<T> apply(final Input<I> input) {
-                return new Success<>(supplier.get(), input);
-            }
-
-        };
+        return lift(input -> new Success<>(supplier.get(), input));
     }
 
+    /**
+     * Constructs a {@link Parser} that attempts to parse the provided {@link Parser}s in the order they are given until
+     * one of them succeeds or aborts. The returned {@link Parser} fails if all {@link Parser}s fail.
+     * @param parsers The {@link Parser}s that should be used for the new {@link Parser}.
+     * @return A {@link Parser} which attempts to parse the provided {@link Parser}s in the order they are given.
+     * @param <T> The type of the {@link Result}.
+     */
     @SafeVarargs
-    public final <T> Parser<T> choice(final Parser<? extends T>... alternatives) {
+    public final <T> Parser<T> choice(final Parser<? extends T>... parsers) {
         Parser<T> choice = error("empty choice");
 
-        for (final Parser<? extends T> parser : alternatives) {
+        for (final Parser<? extends T> parser : parsers) {
             @SuppressWarnings("unchecked")
             final Parser<T> up = (Parser<T>) parser;
             choice = new ChoiceParser<>(choice, up);
@@ -485,11 +567,19 @@ public abstract class Parsing<I> {
         return choice;
     }
 
+    /**
+     * Constructs a new {@link Parser} that applies the provided {@link Parser}s in sequence. It fails when one of the
+     * {@link Parser}s fails and succeeds only when all {@link Parser}s succeed. In this case, the {@link Result}s of
+     * all {@link Parser}s are collected in a single, immutable {@link List}.
+     * @param parsers The {@link Parser}s that should be used for the new {@link Parser}.
+     * @return A {@link Parser} which attempts to parse the provided {@link Parser}s in sequence.
+     * @param <T> The type of a single {@link Result}.
+     */
     @SafeVarargs
-    public final <T> Parser<List<T>> sequence(final Parser<? extends T>... elements) {
+    public final <T> Parser<List<T>> sequence(final Parser<? extends T>... parsers) {
         Parser<List<T>> sequence = success(() -> new ArrayList<>());
 
-        for (final Parser<? extends T> parser : elements) {
+        for (final Parser<? extends T> parser : parsers) {
             sequence = sequence.flatMap(result -> parser.map(element -> {
                 result.add(element);
                 return result;
@@ -499,7 +589,23 @@ public abstract class Parsing<I> {
         return sequence.map(Collections::unmodifiableList);
     }
 
-    public <T> Parser<T> chainLeft1(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
+    /**
+     * Just like {@link Parser#separate1}, this method separates the element {@link Parser} using the separator
+     * {@link Parser}. However, instead of returning a {@link List} of the parsed elements, the elements are folded from
+     * left to right into a single element using the {@link BiFunction}s returned by the separator {@link Parser}. This
+     * is especially useful for parsing left-associative chains of operators such as {@code 1 + 2 + 3}.
+     * @param element The element {@link Parser}.
+     * @param separator The separator {@link Parser} which must return a {@link BiFunction} that combines any two elements.
+     * @return A {@link Parser} which behaves similar to {@link Parser#separate1} but combines all elements into
+     *         a single one.
+     * @param <T> The type of the elements.
+     * @see Parser#separate1
+     * @see #chainLeft
+     * @see #chainRight 
+     * @see #chainRight1
+     * @see BiFunction
+     */
+    public final <T> Parser<T> chainLeft1(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
         return element.and(separator.and(element).repeat()).map(product -> {
             T result = product.first();
 
@@ -511,18 +617,48 @@ public abstract class Parsing<I> {
         });
     }
 
-    public <T> Parser<T> chainLeft(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator, final T otherwise) {
+    /**
+     * Just like {@link Parser#separate}, this method separates the element {@link Parser} using the separator
+     * {@link Parser}. However, instead of returning a {@link List} of the parsed elements, the elements are folded from
+     * left to right into a single element using the {@link BiFunction}s returned by the separator {@link Parser}. This
+     * is especially useful for parsing left-associative chains of operators such as {@code 1 + 2 + 3}.
+     * @param element The element {@link Parser}.
+     * @param separator The separator {@link Parser} which must return a {@link BiFunction} that combines any two elements.
+     * @param otherwise The element that should be returned when there is no single element in the chain.
+     * @return A {@link Parser} which behaves similar to {@link Parser#separate} but combines all elements into
+     *         a single one.
+     * @param <T> The type of the elements.
+     * @see Parser#separate
+     * @see #chainLeft1
+     * @see #chainRight
+     * @see #chainRight1
+     * @see BiFunction
+     */
+    public final <T> Parser<T> chainLeft(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator, final T otherwise) {
         return chainLeft1(element, separator).optional().map(result -> result.orElse(otherwise));
     }
 
-    public <T> Parser<T> chainRight1(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
+    /**
+     * Just like {@link Parser#separate1}, this method separates the element {@link Parser} using the separator
+     * {@link Parser}. However, instead of returning a {@link List} of the parsed elements, the elements are folded from
+     * right to left into a single element using the {@link BiFunction}s returned by the separator {@link Parser}. This
+     * is especially useful for parsing right-associative chains of operators such as {@code a = b = c}.
+     * @param element The element {@link Parser}.
+     * @param separator The separator {@link Parser} which must return a {@link BiFunction} that combines any two elements.
+     * @return A {@link Parser} which behaves similar to {@link Parser#separate1} but combines all elements into
+     *         a single one.
+     * @param <T> The type of the elements.
+     * @see Parser#separate1
+     * @see #chainLeft
+     * @see #chainLeft1
+     * @see #chainRight
+     * @see BiFunction
+     */
+    public final <T> Parser<T> chainRight1(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
         return element.and(separator.and(element).repeat()).map(product -> {
-            if (product.second().isEmpty()) {
-                return product.first();
-            } else {
-                final List<Product<BiFunction<T, T, T>, T>> reversed = product.second().reversed();
-                final Iterator<Product<BiFunction<T, T, T>, T>> iterator = reversed.iterator();
+            final Iterator<Product<BiFunction<T, T, T>, T>> iterator = product.second().reversed().iterator();
 
+            if (iterator.hasNext()) {
                 final Product<BiFunction<T, T, T>, T> first = iterator.next();
                 T result = first.second();
                 BiFunction<T, T, T> combiner = first.first();
@@ -535,18 +671,55 @@ public abstract class Parsing<I> {
 
                 result = combiner.apply(product.first(), result);
                 return result;
+            } else {
+                return product.first();
             }
         });
     }
 
-    public <T> Parser<T> chainRight(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator, final T otherwise) {
+    /**
+     * Just like {@link Parser#separate}, this method separates the element {@link Parser} using the separator
+     * {@link Parser}. However, instead of returning a {@link List} of the parsed elements, the elements are folded from
+     * right to left into a single element using the {@link BiFunction}s returned by the separator {@link Parser}. This
+     * is especially useful for parsing right-associative chains of operators such as {@code a = b = c}.
+     * @param element The element {@link Parser}.
+     * @param separator The separator {@link Parser} which must return a {@link BiFunction} that combines any two elements.
+     * @param otherwise The element that should be returned when there is no single element in the chain.
+     * @return A {@link Parser} which behaves similar to {@link Parser#separate} but combines all elements into
+     *         a single one.
+     * @param <T> The type of the elements.
+     * @see Parser#separate
+     * @see #chainLeft
+     * @see #chainLeft1
+     * @see #chainRight1
+     * @see BiFunction
+     */
+    public final <T> Parser<T> chainRight(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator, final T otherwise) {
         return chainRight1(element, separator).optional().map(result -> result.orElse(otherwise));
     }
 
+    /**
+     * Constructs a new {@link Parser} that behaves just like the given one, applying the current {@link Input.Position}
+     * to the {@link Function} returned by the provided {@link Parser}.
+     * @param parser A {@link Parser} returning a {@link Function} which accepts the current {@link Input.Position}.
+     * @return A new {@link Parser} that provides the given one with a {@link Input.Position}.
+     * @param <T> The type of the {@link Result}.
+     */
     public final <T> Parser<T> position(final Parser<Function<Input<I>.Position, T>> parser) {
-        return new PositionParser<>(parser);
+        return lift(input -> parser.apply(input).map(function -> function.apply(input.position())));
     }
 
+    /**
+     * Constructs a new {@link Parser} which is initialized lazy. That is to say, when this {@link Parser} is applied
+     * for the first time, the provided {@link Supplier} is called and the returned {@link Parser} is used for parsing.
+     * Moreover, this {@link Parser} is memorized for future applications. This method is especially useful since Java
+     * does not provide us with lazy declarations, which are required for mutually recursive parsers (as they occur very
+     * often in practice).
+     * @param supplier The {@link Supplier} that provides the actual {@link Parser}.
+     * @return A {@link Parser} that lazily evaluates the provided {@link Supplier} and behaves just like the {@link Parser}
+     *         provided by the {@link Supplier}.
+     * @param <T> The type of the {@link Result}.
+     */
     public final <T> Parser<T> lazy(final Supplier<Parser<T>> supplier) {
         return new LazyParser<T>(supplier);
     }
@@ -571,7 +744,7 @@ public abstract class Parsing<I> {
 
         @Override
         public Result<U> apply(final Input<I> input) {
-            return parser.apply(input).map(function);
+            return parser.apply(skip(input)).map(function);
         }
 
     }
@@ -594,9 +767,9 @@ public abstract class Parsing<I> {
 
         @Override
         public Result<U> apply(final Input<I> input) {
-            return switch (parser.apply(input).map(function)) {
+            return switch (parser.apply(skip(input)).map(function)) {
                 case Success<Parser<U>> success ->
-                    switch (success.value.apply(success.rest)) {
+                    switch (success.value.apply(skip(success.rest))) {
                         case Success<U> result -> result;
                         case Error<U> error -> new Error<>(error.message, input);
                         case Abort<U> abort -> new Abort<>(abort.message, input);
@@ -630,13 +803,14 @@ public abstract class Parsing<I> {
 
         @Override
         public Result<T> apply(final Input<I> input) {
-            return switch (first.apply(input)) {
+            final Input<I> skipped = skip(input);
+            return switch (first.apply(skipped)) {
                 case Success<T> success -> success;
                 case Abort<T> abort -> abort;
-                case Error<T> firstError -> switch (second.apply(firstError.rest)) {
+                case Error<T> ignore -> switch (second.apply(skipped)) {
                     case Success<T> success -> success;
                     case Abort<T> abort -> abort;
-                    case Error<T> secondError -> new Error<>(Failure.format(secondError.rest, description()), secondError.rest);
+                    case Error<T> secondError -> new Error<>(Failure.format(secondError.rest, description()), skipped);
                 };
             };
         }
@@ -668,7 +842,7 @@ public abstract class Parsing<I> {
                 parser = supplier.get();
             }
 
-            return parser.apply(input);
+            return parser.apply(skip(input));
         }
 
     }
@@ -689,35 +863,14 @@ public abstract class Parsing<I> {
         @Override
         public Result<List<T>> apply(final Input<I> input) {
             final List<T> elements = new ArrayList<>();
-            Result<T> result = parser.apply(input);
+            Result<T> result = parser.apply(skip(input));
 
             while (result.isSuccess()) {
                 elements.add(result.getOrFail());
-                result = parser.apply(result.rest);
+                result = parser.apply(skip(result.rest));
             }
 
             return new Success<>(Collections.unmodifiableList(elements), result.rest);
-        }
-
-    }
-
-    private final class PositionParser<T> extends Parser<T> {
-
-        private final Parser<Function<Input<I>.Position, T>> parser;
-
-        private PositionParser(final Parser<Function<Input<I>.Position, T>> parser) {
-            this.parser = parser;
-        }
-
-        @Override
-        public Description description() {
-            return parser.description();
-        }
-
-        @Override
-        public Result<T> apply(final Input<I> input) {
-            final Input<I>.Position position = input.position();
-            return parser.apply(input).map(function -> function.apply(position));
         }
 
     }
@@ -761,9 +914,10 @@ public abstract class Parsing<I> {
 
         @Override
         public Result<Void> apply(final Input<I> input) {
-            return switch(parser.apply(input)) {
-                case Success<?> success -> new Error<>(Failure.format(input, description()), success.rest);
-                case Failure<?> ignore -> new Success<>(null, input);
+            final Input<I> skipped = skip(input);
+            return switch(parser.apply(skipped)) {
+                case Success<?> ignore -> new Error<>(Failure.format(skipped, description()), skipped);
+                case Failure<?> ignore -> new Success<>(null, skipped);
             };
         }
 
@@ -782,8 +936,9 @@ public abstract class Parsing<I> {
 
         @Override
         public Result<T> apply(final Input<I> input) {
-            System.out.printf("trying '%s' in %s (%s)\n", name, input.position(), input.position().describe());
-            final Result<T> result = parser.apply(input);
+            final Input<I> skipped = skip(input);
+            System.out.printf("trying '%s' in %s (%s)\n", name, skipped.position(), skipped.position().describe());
+            final Result<T> result = parser.apply(skipped);
             return switch (result) {
                 case Success<T> success -> {
                     System.out.printf("succeeded to parse '%s': %s\n", name, success.value);

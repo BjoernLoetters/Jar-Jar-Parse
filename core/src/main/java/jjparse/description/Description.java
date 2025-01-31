@@ -1,4 +1,4 @@
-package jcombinators.description;
+package jjparse.description;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,8 +6,8 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import jcombinators.Parsing.Parser;
-import jcombinators.Parsing.Failure;
+import jjparse.Parsing.Parser;
+import jjparse.Parsing.Failure;
 
 /**
  * The base class for all kinds of {@link Parser} {@link Description}s.

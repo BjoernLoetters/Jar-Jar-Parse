@@ -36,7 +36,7 @@ In IntelliJ this can be done by right-clicking on the `jar`-file and selecting `
 ##### Usage Example
 
 ```java
-import static jcombinators.StringParsing;
+import static jjparse.StringParsing;
 
 public class MyParser extends StringParsing {
 
@@ -50,7 +50,7 @@ public class MyParser extends StringParsing {
     public static void main(final String[] arguments) {
         // Create an input of characters with the name 'My Test Input' (for error reporting).
         Input<Character> input = Input.of("My Test Input", "42 + 0");
-        
+
         // Use the 'add' parser to parse the above input. Note how a parser is
         // just a function that takes an input and returns a parse result.
         final MyParser parser = new MyParser();
@@ -65,7 +65,7 @@ public class MyParser extends StringParsing {
                 break;
         }
     }
-    
+
 }
 ```
 

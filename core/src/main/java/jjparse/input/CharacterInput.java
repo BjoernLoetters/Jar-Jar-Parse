@@ -1,10 +1,7 @@
-package jcombinators.input;
+package jjparse.input;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * A specific implementation of an {@link Input} for {@link Character}s that also implements the {@link CharSequence}
@@ -29,6 +26,8 @@ public final class CharacterInput extends Input<Character> implements CharSequen
 
     private final int length;
 
+    private final CodePointPosition position;
+
     /**
      * Constructs a new {@link CharacterInput}.
      * @param name A human-readable name for this {@link CharacterInput}.
@@ -44,11 +43,12 @@ public final class CharacterInput extends Input<Character> implements CharSequen
         this.offset = offset;
         this.length = length;
         this.lines = lines;
+        this.position = new CodePointPosition(offset);
     }
 
     @Override
     public boolean isEmpty() {
-        return offset >= length;
+        return length < 1;
     }
 
     @Override
@@ -67,7 +67,7 @@ public final class CharacterInput extends Input<Character> implements CharSequen
 
     @Override
     public CodePointPosition position() {
-        return new CodePointPosition(offset);
+        return position;
     }
 
     @Override
@@ -110,6 +110,15 @@ public final class CharacterInput extends Input<Character> implements CharSequen
      */
     public final class CodePointPosition extends Position {
 
+        /** A cached version of this {@link Position}'s line number. */
+        private int lineNumber = -1;
+
+        /** A cached version of this {@link Position}'s column number. */
+        private int columnNumber = -1;
+
+        /** A cached version of this {@link Position}'s code point. */
+        private int codePoint = -1;
+
         /**
          * Creates a new {@link CodePointPosition} on basis of the provided offset.
          * @param offset The offset of this {@link CodePointPosition}. An offset is the number of characters that must
@@ -124,7 +133,18 @@ public final class CharacterInput extends Input<Character> implements CharSequen
          * @return The unicode code point at this {@link CodePointPosition}.
          */
         public int getCodePoint() {
-            return Character.codePointAt(sequence, offset);
+            if (codePoint == -1) {
+                if (Character.isLowSurrogate(sequence.charAt(offset)) && offset > 0 && Character.isHighSurrogate(sequence.charAt(offset - 1))) {
+                    // The offset of this position is odd and points in between a surrogate pair (which should not happen
+                    // normally). In order to still return a meaningful code point, we jump back over the leading high
+                    // surrogate.
+                    codePoint = Character.codePointAt(sequence, offset - 1);
+                } else {
+                    codePoint = Character.codePointAt(sequence, offset);
+                }
+            }
+
+            return codePoint;
         }
 
         /**
@@ -134,25 +154,34 @@ public final class CharacterInput extends Input<Character> implements CharSequen
          * @return The line number of this {@link CodePointPosition}.
          */
         public int getLineNumber() {
-            // Here, we do a binary search to find the index of the line number that corresponds to the offset of this position.
-            int lower = 0;
-            int upper = lines.length - 1;
+            if (lineNumber == -1) {
+                // Here, we do a binary search to find the index of the line number that corresponds to the offset of this position.
+                int lower = 0;
+                int upper = lines.length;
 
-            while (lower + 1 < upper) {
-                final int middle = lower + ((upper - lower) / 2);
-                if (offset < lines[middle]) {
-                    // The offset of this position is smaller than the offset of the line `middle`, which means that we
-                    // must look in the lower half of the `lines` array.
-                    upper = middle;
-                } else {
-                    // The offset of this position is greater than or equal to the offset of the line `middle`, which means
-                    // that we must look in the upper half of the `lines` array
-                    lower = middle;
+                while (lower < upper) {
+                    final int middle = lower + (upper - lower) / 2;
+                    if (offset < lines[middle]) {
+                        // The offset of this position is smaller than the offset of the line in the center of the
+                        // search space, so we have to search in the lower half.
+                        upper = middle;
+                    } else if (middle + 1 < upper && offset >= lines[middle + 1]) {
+                        // The offset of this position is greater than or equal to the offset of the next line after the
+                        // line in the center of the search space, so we have to search in the upper half.
+                        lower = middle + 1;
+                    } else {
+                        // The offset of this position is exactly within the line at the center of the search space, so
+                        // we break out of this loop here.
+                        lower = middle;
+                        upper = middle;
+                    }
                 }
+
+                // We add 1 here, since `lower` is the line index and not the line number.
+                lineNumber = lower + 1;
             }
 
-            // We add 1 here, since line numbers usually start at 1 and not 0.
-            return lower + 1;
+            return lineNumber;
         }
 
         /**
@@ -162,10 +191,29 @@ public final class CharacterInput extends Input<Character> implements CharSequen
          * @return The column number of this {@link CodePointPosition}.
          */
         public int getColumnNumber() {
-            final int lineNumber = getLineNumber() - 1;
-            final int lineOffset = lineNumber < lines.length ? lines[lineNumber] : 0;
-            // We add 1 here, since column numbers usually start at 1 and not 0.
-            return offset - lineOffset + 1;
+            if (columnNumber == -1) {
+                // We start at 1 here, since column numbers usually do not start at 0.
+                columnNumber = 1;
+
+                // Next, we count every code point of the line as a single column.
+                int offset = lines[getLineNumber() - 1];
+                while (offset < this.offset) {
+                    final int codePoint = Character.codePointAt(sequence, offset);
+                    offset += Character.charCount(codePoint);
+                    columnNumber += 1;
+                }
+
+                if (offset > this.offset) {
+                    // This position is not correctly aligned with the unicode code points in the underlying source.
+                    // That is to say, the offset of this position points to a low surrogate (which should not happen
+                    // normally) and the computed column number already points to the next unicode code point. For this
+                    // reason, we decrement the column number again, to point to the code point to which the low
+                    // surrogate belongs.
+                    columnNumber -= 1;
+                }
+            }
+
+            return columnNumber;
         }
 
         @Override

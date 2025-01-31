@@ -1,8 +1,8 @@
-package jcombinators.data;
+package jjparse.data;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import jcombinators.Parsing.Parser;
+import jjparse.Parsing.Parser;
 
 /**
  * A simple representation of a {@link Product} (or pair) as a record. This class is primarily used by the combinator

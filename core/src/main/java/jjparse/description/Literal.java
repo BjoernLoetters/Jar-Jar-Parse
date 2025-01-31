@@ -1,4 +1,4 @@
-package jcombinators.description;
+package jjparse.description;
 
 import java.util.Optional;
 

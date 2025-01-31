@@ -1,6 +1,6 @@
-package jcombinators.primitive;
+package jjparse.primitive;
 
-import jcombinators.ParserTest;
+import jjparse.ParserTest;
 import org.junit.Test;
 
 import java.util.List;

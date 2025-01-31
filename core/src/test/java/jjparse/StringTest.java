@@ -1,4 +1,4 @@
-package jcombinators;
+package jjparse;
 
 import org.junit.Test;
 
