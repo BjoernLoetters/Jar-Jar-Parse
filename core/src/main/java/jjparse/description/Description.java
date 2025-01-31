@@ -30,6 +30,7 @@ import jjparse.Parsing.Failure;
  * @see Sequence
  * @see Empty
  * @see Parser
+ * @see Parser#description
  *
  * @author Björn Lötters
  */

@@ -1,13 +1,30 @@
 package jjparse.description;
 
+import jjparse.Parsing.Parser;
+import jjparse.Parsing;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+/**
+ * A {@link Description} for {@link Parser}s that expect a {@link Parsing#sequence}.
+ *
+ * @author Björn Lötters
+ *
+ * @see Description
+ * @see Parsing#sequence
+ * @see Parser#description
+ */
 public final class Sequence extends Description {
 
+    /** The {@link List} of {@link Description}s. */
     public final List<Description> elements;
 
+    /**
+     * Constructs a new {@link Sequence} {@link Description}.
+     * @param elements The individual {@link Description}s of this {@link Sequence} {@link Description}.
+     */
     public Sequence(final List<Description> elements) {
         this.elements = elements;
     }
