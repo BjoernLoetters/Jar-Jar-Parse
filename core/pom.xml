@@ -27,6 +27,7 @@
                 <executions>
                     <execution>
                         <id>attach-javadoc</id>
+                        <phase>none</phase> <!-- only produce JavaDoc explicitly with mvn javadoc:jar -->
                         <goals>
                             <goal>jar</goal>
                         </goals>
