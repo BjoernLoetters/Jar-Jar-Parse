@@ -14,6 +14,11 @@ import java.util.Optional;
  */
 public final class Empty extends Description {
 
+    /**
+     * Constructs a new {@link Empty} {@link Description}.
+     */
+    public Empty() { }
+
     @Override
     public Optional<String> describe() {
         return Optional.empty();

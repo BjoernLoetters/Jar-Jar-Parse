@@ -1,6 +1,5 @@
 package jjparse.input;
 
-import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 /**
@@ -18,14 +17,19 @@ import java.util.NoSuchElementException;
  */
 public final class CharacterInput extends Input<Character> implements CharSequence {
 
+    /** A cache of line offsets to efficiently compute the line and column numbers of a {@link Position}. */
     private final int[] lines;
 
+    /** The underlying {@link CharSequence} of this {@link CharacterInput}. */
     private final CharSequence sequence;
 
+    /** The offset in characters that denotes the start of the subsequence in the underlying {@link CharSequence}. */
     private final int offset;
 
+    /** The length of the subsequence that is denoted by the offset. */
     private final int length;
 
+    /** The current {@link Position} of this {@link CharacterInput}. */
     private final CodePointPosition position;
 
     /**

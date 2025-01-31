@@ -37,6 +37,11 @@ import jjparse.Parsing.Failure;
 public sealed abstract class Description permits Choice, Literal, Negation, RegExp, Sequence, Empty {
 
     /**
+     * Construct a new {@link Description}.
+     */
+    public Description() { }
+
+    /**
      * Produces a {@link String} that explains what a corresponding {@link Parser} would expect according to this
      * {@link Description}.
      * @return An {@link Optional} {@link String} where {@link Optional#empty()} is returned in case this

@@ -10,7 +10,6 @@ import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.function.Predicate;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -76,35 +75,6 @@ public abstract class Input<T> {
      * @return The {@link Position} of the first element in this {@link Input}.
      */
     public abstract Position position();
-
-    /**
-     * Filters this {@link Input} by skipping all elements for which the given {@link Predicate} does not hold. The
-     * {@link Position}s returned by the filtered {@link Input} are not affected by this operation. That is, all
-     * elements retain their original {@link Position}s from this {@link Input}.
-     * @param predicate The {@link Predicate} that shall be used as filter. Whenever this {@link Predicate} returns
-     *                  {@code false} for an element, it is skipped and not included in the final {@link Input}.
-     * @return An {@link Input} containing all elements of this {@link Input} except for those elements for which the
-     *         provided {@link Predicate} does not hold.
-     * @see #position()
-     */
-    public final Input<T> filter(final Predicate<T> predicate) {
-        return new FilterInput<>(this, predicate);
-    }
-
-    /**
-     * Skips the leading elements of this {@link Input} as long as the provided {@link Predicate} holds.
-     * @param predicate The {@link Predicate} that indicates whether an element shall be skipped or not. 
-     * @return The remaining {@link Input} after skipping the leading elements of this {@link Input}.
-     */
-    public final Input<T> skip(final Predicate<T> predicate) {
-        Input<T> input = this;
-
-        while (input.nonEmpty() && predicate.test(input.head())) {
-            input = input.tail();
-        }
-
-        return input;
-    }
 
     /**
      * Represents an offset within this {@link Input}. Since the unit of this offset depends on the element type of
