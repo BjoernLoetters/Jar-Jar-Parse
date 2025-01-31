@@ -21,6 +21,7 @@ import java.util.stream.Stream;
  *
  * @see Parsing.Result
  * @see Parsing.Parser
+ * @see StringParsing
  *
  * @author Björn Lötters
  *
