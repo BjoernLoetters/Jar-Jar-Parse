@@ -1,6 +1,6 @@
-package jcombinators;
+package jjparse;
 
-import jcombinators.input.Input;
+import jjparse.input.Input;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
@@ -11,7 +11,7 @@ import static org.junit.Assert.fail;
 
 public abstract class ParserTest extends StringParsing {
 
-    public final Optional<String> getTestName() {
+    public final String getTestName() {
         final StackTraceElement[] stack = Thread.currentThread().getStackTrace();
 
         for (int i = stack.length - 1; i >= 0; --i) {
@@ -33,15 +33,15 @@ public abstract class ParserTest extends StringParsing {
             }
 
             if (name != null) {
-                return Optional.of(name);
+                return name;
             }
         }
 
-        return Optional.empty();
+        throw new RuntimeException("not a test");
     }
 
     public final <T> void assertSuccess(final Parser<T> parser, final T expected, final String string) {
-        final Input<Character> input = Input.of("Test '" + getTestName().orElse("<unknown test>") + "'", string);
+        final Input<Character> input = Input.of("Test '" + getTestName() + "'", string);
         switch (parser.apply(input)) {
             case Success<T> success:
                 assertEquals(expected, success.value);
@@ -54,7 +54,7 @@ public abstract class ParserTest extends StringParsing {
     }
 
     public final void assertFailure(final Parser<?> parser, final String message, final String string) {
-        final Input<Character> input = Input.of("Test '" + getTestName().orElse("<unknown test>") + "'", string);
+        final Input<Character> input = Input.of("Test '" + getTestName() + "'", string);
         switch (parser.apply(input)) {
             case Success<?> success:
                 fail("expected parse failure, but got success with value '" + success.value + "'");

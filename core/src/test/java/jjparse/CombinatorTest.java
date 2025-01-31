@@ -1,8 +1,7 @@
-package jcombinators;
+package jjparse;
 
-import jcombinators.data.Tuple;
-import jcombinators.input.Input;
-import jcombinators.position.Position;
+import jjparse.data.Product;
+import jjparse.input.Input;
 import org.junit.Test;
 
 import java.util.List;
@@ -85,16 +84,16 @@ public final class CombinatorTest extends ParserTest {
     public void andSuccessTest() {
         Parser<Character> first = character('a');
         Parser<Character> second = character('b');
-        Parser<Tuple<Character, Character>> parser = first.and(second);
+        Parser<Product<Character, Character>> parser = first.and(second);
 
-        assertSuccess(parser, new Tuple<>('a', 'b'), "ab");
+        assertSuccess(parser, new Product<>('a', 'b'), "ab");
     }
 
     @Test
     public void andFailureTest() {
         Parser<Character> first = character('a');
         Parser<Character> second = character('b');
-        Parser<Tuple<Character, Character>> parser = first.and(second);
+        Parser<Product<Character, Character>> parser = first.and(second);
 
         assertFailure(parser, "syntax error in Test 'andFailureTest' at line 1 and column 2: unexpected character 'c', expected the literal 'b'", "ac");
     }
@@ -144,8 +143,8 @@ public final class CombinatorTest extends ParserTest {
 
     @Test
     public void separateTrailing2Test() {
-        final Parser<Tuple<List<Character>, Character>> parser = character('a').separate(character(',')).and(character(','));
-        assertSuccess(parser, new Tuple<>(List.of('a', 'a'), ','), "a,a,");
+        final Parser<Product<List<Character>, Character>> parser = character('a').separate(character(',')).and(character(','));
+        assertSuccess(parser, new Product<>(List.of('a', 'a'), ','), "a,a,");
     }
 
     @Test
@@ -211,8 +210,8 @@ public final class CombinatorTest extends ParserTest {
 
     @Test
     public void commitChainedParserTest() {
-        Parser<Tuple<Character, Character>> parser = character('a').commit().and(character('b'));
-        assertSuccess(parser, new Tuple<>('a', 'b'), "ab");
+        Parser<Product<Character, Character>> parser = character('a').commit().and(character('b'));
+        assertSuccess(parser, new Product<>('a', 'b'), "ab");
     }
 
     @Test
@@ -223,24 +222,58 @@ public final class CombinatorTest extends ParserTest {
 
     @Test
     public void positionParserCorrectPositionTest() {
-        final String contents = "line1\nline2\nline3\n";
-        final Input<Character> input = Input.of("test", contents);
+        final String contents = "line1 column1\n line2\n    column3  line3\n";
+        final Input<Character> input = Input.of("Test '" + getTestName() + "'", contents);
 
-        final Parser<Function<Position, String>> parser = regex("line[0-9]\n").map(ignore -> position -> position.line + ":" + position.column);
+        final Parser<Function<Input<Character>.Position, String>> parser = regex("line[0-9]|column[0-9]").map(ignore -> position -> position.toString());
 
         final Parser<String> positionParser = position(parser);
         final Result<String> firstResult = positionParser.apply(input);
 
         assertTrue(firstResult.isSuccess());
-        assertEquals("1:1", firstResult.get().get());
+        assertEquals("Test 'positionParserCorrectPositionTest' at line 1 and column 1", firstResult.get().get());
 
         final Result<String> secondResult = positionParser.apply(firstResult.rest);
         assertTrue(secondResult.isSuccess());
-        assertEquals("2:1", secondResult.get().get());
+        assertEquals("Test 'positionParserCorrectPositionTest' at line 1 and column 7", secondResult.get().get());
 
         final Result<String> thirdResult = positionParser.apply(secondResult.rest);
         assertTrue(thirdResult.isSuccess());
-        assertEquals("3:1", thirdResult.get().get());
+        assertEquals("Test 'positionParserCorrectPositionTest' at line 2 and column 2", thirdResult.get().get());
+
+        final Result<String> fourthResult = positionParser.apply(thirdResult.rest);
+        assertTrue(fourthResult.isSuccess());
+        assertEquals("Test 'positionParserCorrectPositionTest' at line 3 and column 5", fourthResult.get().get());
+
+        final Result<String> fifthResult = positionParser.apply(fourthResult.rest);
+        assertTrue(fifthResult.isSuccess());
+        assertEquals("Test 'positionParserCorrectPositionTest' at line 3 and column 14", fifthResult.get().get());
+    }
+
+    @Test
+    public void positionParserCorrectCodePointPositionTest() {
+        final String contents = "😀🙂\n  🙂😀";
+        final Input<Character> input = Input.of("Test '" + getTestName() + "'", contents);
+
+        final Parser<Function<Input<Character>.Position, String>> parser = regex("😀|🙂").map(ignore -> position -> position.toString());
+
+        final Parser<String> positionParser = position(parser);
+        final Result<String> firstResult = positionParser.apply(input);
+
+        assertTrue(firstResult.isSuccess());
+        assertEquals("Test 'positionParserCorrectCodePointPositionTest' at line 1 and column 1", firstResult.get().get());
+
+        final Result<String> secondResult = positionParser.apply(firstResult.rest);
+        assertTrue(secondResult.isSuccess());
+        assertEquals("Test 'positionParserCorrectCodePointPositionTest' at line 1 and column 2", secondResult.get().get());
+
+        final Result<String> thirdResult = positionParser.apply(secondResult.rest);
+        assertTrue(thirdResult.isSuccess());
+        assertEquals("Test 'positionParserCorrectCodePointPositionTest' at line 2 and column 3", thirdResult.get().get());
+
+        final Result<String> fourthResult = positionParser.apply(thirdResult.rest);
+        assertTrue(fourthResult.isSuccess());
+        assertEquals("Test 'positionParserCorrectCodePointPositionTest' at line 2 and column 4", fourthResult.get().get());
     }
 
 }

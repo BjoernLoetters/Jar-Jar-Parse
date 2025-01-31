@@ -24,10 +24,13 @@ jobs:
           cache: 'maven'
 
       - name: Unit Test
-        run: mvn clean test
+        run: mvn -pl core clean test
 
       - name: Build JAR-File
-        run: mvn clean package -DskipTests
+        run: mvn -pl core clean package -DskipTests
+
+      - name: Generate JavaDoc
+        run: mvn -pl core javadoc:jar
 
       - name: Upload Release
         uses: marvinpinto/action-automatic-releases@latest

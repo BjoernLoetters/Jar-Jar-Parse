@@ -1,13 +1,30 @@
-package jcombinators.description;
+package jjparse.description;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import jjparse.Parsing.Parser;
+import jjparse.Parsing;
+
+/**
+ * A {@link Description} for {@link Parser}s that expect a {@link Parsing#choice}.
+ *
+ * @author Björn Lötters
+ *
+ * @see Description
+ * @see Parsing#choice
+ * @see Parser#description
+ */
 public final class Choice extends Description {
 
+    /** The {@link List} of alternative {@link Description}s. */
     public final List<Description> alternatives;
-    
+
+    /**
+     * Constructs a new {@link Choice} {@link Description}.
+     * @param alternatives The list of alternative {@link Description}s.
+     */
     public Choice(final List<Description> alternatives) {
         this.alternatives = alternatives;
     }

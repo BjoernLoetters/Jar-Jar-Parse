@@ -6,16 +6,16 @@
 
     <parent>
         <groupId>io.github.bjoernloetters</groupId>
-        <artifactId>jcombinators-examples</artifactId>
+        <artifactId>jjparse-examples</artifactId>
         <version>1.6.0-alpha</version>
     </parent>
 
-    <artifactId>jcombinators-example-json</artifactId>
+    <artifactId>jjparse-example-json</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>io.github.bjoernloetters</groupId>
-            <artifactId>jcombinators-core</artifactId>
+            <artifactId>jjparse-core</artifactId>
             <version>1.6.0-alpha</version>
         </dependency>
     </dependencies>

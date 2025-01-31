@@ -6,9 +6,9 @@
 
     <parent>
         <groupId>io.github.bjoernloetters</groupId>
-        <artifactId>jcombinators</artifactId>
+        <artifactId>jjparse</artifactId>
         <version>1.6.0-alpha</version>
     </parent>
 
-    <artifactId>jcombinators-documentation</artifactId>
+    <artifactId>jjparse-documentation</artifactId>
 </project>
