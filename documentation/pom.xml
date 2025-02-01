@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.github.bjoernloetters</groupId>
         <artifactId>jjparse</artifactId>
-        <version>1.1.1-beta</version>
+        <version>1.1.2-beta</version>
     </parent>
 
     <artifactId>jjparse-documentation</artifactId>
