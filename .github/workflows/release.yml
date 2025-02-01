@@ -24,13 +24,13 @@ jobs:
           cache: 'maven'
 
       - name: Unit Test
-        run: mvn -pl core clean test
+        run: mvn -pl core clean test -Dgpg.skip=true
 
       - name: Build JAR-File
-        run: mvn -pl core clean package -DskipTests
+        run: mvn -pl core clean package -DskipTests -Dgpg.skip=true
 
       - name: Generate Sources JAR
-        run: mvn -pl core clean source:jar -DskipTests
+        run: mvn -pl core clean source:jar -DskipTests -Dgpg.skip=true
 
       - name: Upload Release
         uses: marvinpinto/action-automatic-releases@latest
