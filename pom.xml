@@ -20,8 +20,16 @@
         </license>
     </licenses>
 
+    <distributionManagement>
+        <repository>
+            <id>central</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
     <developers>
         <developer>
+            <id>BjoernLoetters</id>
             <name>Björn Lötters</name>
             <email>mail@bjoernloetters.com</email>
         </developer>
