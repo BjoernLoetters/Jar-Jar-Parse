@@ -9,6 +9,10 @@
     <version>1.0.0-beta</version>
     <packaging>pom</packaging>
 
+    <name>Jar Jar Parse</name>
+    <description>A lightweight but fully typed library for parser combinators in Java.</description>
+    <url>https://github.com/BjoernLoetters/Jar-Jar-Parse</url>
+
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>

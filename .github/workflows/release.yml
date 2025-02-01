@@ -29,9 +29,6 @@ jobs:
       - name: Build JAR-File
         run: mvn -pl core clean package -DskipTests
 
-      - name: Generate JavaDoc JAR
-        run: mvn -pl core clean javadoc:jar -DskipTests
-
       - name: Generate Sources JAR
         run: mvn -pl core clean source:jar -DskipTests
 
