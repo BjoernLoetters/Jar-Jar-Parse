@@ -6,7 +6,7 @@
 
     <groupId>io.github.bjoernloetters</groupId>
     <artifactId>jjparse</artifactId>
-    <version>1.0.0-beta</version>
+    <version>1.1.1-beta</version>
     <packaging>pom</packaging>
 
     <name>Jar Jar Parse</name>
