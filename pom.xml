@@ -22,8 +22,8 @@
 
     <distributionManagement>
         <repository>
-            <id>central</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>maven-central</id>
+            <url>https://central.sonatype.com/api/publish/maven</url>
         </repository>
     </distributionManagement>
 
