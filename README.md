@@ -1,5 +1,6 @@
-![Test Status](https://github.com/BjoernLoetters/Java-Parser-Combinators/actions/workflows/test.yml/badge.svg?branch=main)
-![Test Status](https://img.shields.io/github/v/release/BjoernLoetters/Java-Parser-Combinators?label=Release&logo=github)
+![Unit Test](https://github.com/BjoernLoetters/Java-Parser-Combinators/actions/workflows/test.yml/badge.svg?branch=main)
+![Release](https://img.shields.io/github/v/release/BjoernLoetters/Java-Parser-Combinators?label=Release&logo=github)
+![License](https://img.shields.io/github/license/BjoernLoetters/Jar-Jar-Parse?label=License)
 
 # Jar Jar Parse
 *"Yousa needin’ a parser? Meesa help!"*
