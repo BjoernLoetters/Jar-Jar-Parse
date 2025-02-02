@@ -1,6 +1,7 @@
 ![Unit Test](https://github.com/BjoernLoetters/Java-Parser-Combinators/actions/workflows/test.yml/badge.svg?branch=main)
+![License](https://img.shields.io/github/license/BjoernLoetters/Jar-Jar-Parse?label=License&logo=github)
 ![Release](https://img.shields.io/github/v/release/BjoernLoetters/Java-Parser-Combinators?label=Release&logo=github)
-![License](https://img.shields.io/github/license/BjoernLoetters/Jar-Jar-Parse?label=License)
+![Maven](https://img.shields.io/maven-central/v/io.github.bjoernloetters/jjparse-core?label=Maven%20Central&logo=github)
 
 # Jar Jar Parse
 *"Yousa needin’ a parser? Meesa help!"*
@@ -26,16 +27,54 @@ If you find this project interesting, please consider [contributing](#contributi
 
 ##### Installation 
 
-At the moment, **JJParse** is only available as a `jar`-release via the [release page](https://github.com/BjoernLoetters/Java-Parser-Combinators/releases).
-In the near future, it will also be available as a maven package, so stay tuned!
+**JJParse** is available via the [Maven Central Repository](https://central.sonatype.com/artifact/io.github.bjoernloetters/jjparse-core), so installing it is as easy as pie!
 
-To install **JJParse**, follow these steps:
-1. Download the latest `jar` file from the [release page](https://github.com/BjoernLoetters/Java-Parser-Combinators/releases).
-2. Add the `jar` file to your project's classpath.
-    - In **IntelliJ IDEA**: Right-click the `jar` file → Select **"Add as Library ..."**
-    - In **Eclipse**: Right-click your project → **Build Path** → **Add External Archives ...** and select the `jar` file.
-    - If using **Gradle** or **Maven**, you can manually place the `jar` in a `libs/` directory and reference it in your configuration.
-3. (Optional) Add the JavaDoc `jar` file to your environment.
+###### Automatic Installation
+
+If you are already using `maven`, just copy and paste the following dependency to your `pom.xml`: 
+```xml
+<dependency>
+    <groupId>io.github.bjoernloetters</groupId>
+    <artifactId>jjparse-core</artifactId>
+    <version>1.0.1</version>
+</dependency>
+```
+
+Thanks to the widespread use of the Maven Central Repository, you can also include **JJParse** in other build tools:
+<details>
+   <summary>Gradle</summary>
+
+   ```
+   implementation group: 'io.github.bjoernloetters', name: 'jjparse-core', version: '1.0.1'
+   ```
+   
+</details>
+<details>
+   <summary>SBT</summary>
+
+   ```scala
+    libraryDependencies += "io.github.bjoernloetters" % "jjparse-core" % "1.0.1"
+   ```
+
+</details>
+<details>
+   <summary>Ivy</summary>
+
+   ```xml
+   <dependency org="io.github.bjoernloetters" name="jjparse-core" rev="1.0.1"/>
+   ```
+   
+</details>
+
+###### Manual Installation
+
+If the above options do not fit your needs, you can also install **JJParse** manually by downloading the latest `jar`-release via the [release page](https://github.com/BjoernLoetters/Java-Parser-Combinators/releases).
+To install **JJParse** in this way, follow these steps:
+1. Download the latest `jar`-file from the [release page](https://github.com/BjoernLoetters/Java-Parser-Combinators/releases).
+2. Add the `jar`-file to your project's classpath.
+    - In **IntelliJ IDEA**: Right-click the `jar`-file → Select **"Add as Library ..."**
+    - In **Eclipse**: Right-click your project → **Build Path** → **Add External Archives ...** and select the `jar`-file.
+3. (Optional) Add the JavaDoc `jar`-file to your development environment.  
 
 ##### First Steps
 
@@ -116,7 +155,7 @@ Here ...
 For example:
 - A character parser takes an `Input<Character>` and produces a `Result<Character>`.
 - A string parser takes an `Input<Character>` and produces a `Result<String>`.
-- A parser that combines a character parser with a string parser produces a `Result<Tuple<Character, String>>`.
+- A parser that combines a character parser with a string parser produces a `Result<Product<Character, String>>`.
 
 As with any parsing method, things don’t always go smoothly. 
 A parsing attempt can fail, which is why a `Result<U>` may either be a `Success<U>` (containing the successful result) or a `Failure<U>` (containing an error message).
