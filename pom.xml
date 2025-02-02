@@ -6,10 +6,10 @@
 
     <groupId>io.github.bjoernloetters</groupId>
     <artifactId>jjparse</artifactId>
-    <version>1.1.3-beta</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
 
-    <name>${project.groupId}:${project.artifactId}</name>
+    <name>Jar Jar Parse</name>
     <description>A lightweight but fully typed library for parser combinators in Java.</description>
     <url>https://github.com/BjoernLoetters/Jar-Jar-Parse</url>
 
@@ -20,12 +20,11 @@
         </license>
     </licenses>
 
-    <distributionManagement>
-        <repository>
-            <id>maven-central</id>
-            <url>https://central.sonatype.com/api/publish/maven</url>
-        </repository>
-    </distributionManagement>
+    <scm>
+        <connection>scm:git:git://github.com/BjoernLoetters/Jar-Jar-Parse.git</connection>
+        <developerConnection>scm:git:ssh://github.com/BjoernLoetters/Jar-Jar-Parse.git</developerConnection>
+        <url>http://github.com/BjoernLoetters/Jar-Jar-Parse/tree/main</url>
+    </scm>
 
     <developers>
         <developer>
