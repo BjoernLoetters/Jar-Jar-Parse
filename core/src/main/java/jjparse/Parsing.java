@@ -43,6 +43,8 @@ public abstract class Parsing<I> {
      *     <li>{@link Error}: A recoverable kind of {@link Failure} that may trigger backtracking during parsing.</li>
      *     <li>{@link Abort}: A fatal kind of {@link Failure} that does not trigger backtracking and aborts parsing.</li>
      * </ul>
+     * <br/>
+     * <b>Note</b>: This class is intended to be immutable and hence covariant in its type parameter.
      *
      * @see Success
      * @see Failure
@@ -50,7 +52,7 @@ public abstract class Parsing<I> {
      *
      * @author Björn Lötters
      *
-     * @param <T> The type of the parsed value in case of a {@link Success}.
+     * @param <T> The covariant type of the parsed value in case of a {@link Success}.
      */
     public sealed abstract class Result<T> permits Success, Failure {
 
@@ -61,8 +63,10 @@ public abstract class Parsing<I> {
          * The base constructor for {@link Result}.
          * @param rest The rest of the {@link Input}.
          */
-        public Result(final Input<I> rest) {
-            this.rest = rest;
+        public Result(final Input<? extends I> rest) {
+            @SuppressWarnings("unchecked") // The type is assumed to be immutable and hence covariant
+            final Input<I> up = (Input<I>) rest;
+            this.rest = up;
         }
 
         /**
@@ -111,13 +115,15 @@ public abstract class Parsing<I> {
 
     /**
      * Represents a successful result of a parsing operation.
+     * <br/><br/>
+     * <b>Note</b>: This class is intended to be immutable and hence covariant in its type parameter.
      *
      * @see Result
      * @see Failure
      *
      * @author Björn Lötters
      *
-     * @param <T> The type of the parsed value.
+     * @param <T> The covariant type of the parsed value.
      */
     public final class Success<T> extends Result<T> {
 
@@ -129,7 +135,7 @@ public abstract class Parsing<I> {
          * @param value The parsed value.
          * @param rest The rest of the {@link Input}.
          */
-        public Success(final T value, final Input<I> rest) {
+        public Success(final T value, final Input<? extends I> rest) {
             super(rest);
             this.value = value;
         }
@@ -175,6 +181,8 @@ public abstract class Parsing<I> {
      *     <li>{@link Error}: A recoverable kind of {@link Failure} that may trigger backtracking during parsing.</li>
      *     <li>{@link Abort}: A fatal kind of {@link Failure} that does not trigger backtracking and aborts parsing.</li>
      * </ul>
+     * <br/>
+     * <b>Note</b>: This class is intended to be immutable and hence covariant in its type parameter.
      *
      * @see Result
      * @see Success
@@ -183,7 +191,7 @@ public abstract class Parsing<I> {
      *
      * @author Björn Lötters
      *
-     * @param <T> The type of the parsed value, which is unused in case of a {@link Failure}.
+     * @param <T> The covariant type of the parsed value, which is unused in case of a {@link Failure}.
      */
     public sealed abstract class Failure<T> extends Result<T> {
 
@@ -196,7 +204,7 @@ public abstract class Parsing<I> {
          * @param message The error message that describes this {@link Failure} in more detail.
          * @param rest The rest of the {@link Input}.
          */
-        public Failure(final String message, final Input<I> rest) {
+        public Failure(final String message, final Input<? extends I> rest) {
             super(rest);
             this.message = message;
         }
@@ -230,16 +238,14 @@ public abstract class Parsing<I> {
 
         @Override
         public <U> Result<U> map(final Function<T, U> function) {
-            // Since failures never carry a value of their type parameter, this cast always succeeds.
-            @SuppressWarnings("unchecked")
+            @SuppressWarnings("unchecked") // A failure does not carry a value of its type parameter
             final Failure<U> failure = (Failure<U>) this;
             return failure;
         }
 
         @Override
         public <U> Result<U> flatMap(final Function<T, Result<U>> function) {
-            // Since failures never carry a value of their type parameter, this cast always succeeds.
-            @SuppressWarnings("unchecked")
+            @SuppressWarnings("unchecked") // A failure does not carry a value of its type parameter
             final Failure<U> failure = (Failure<U>) this;
             return failure;
         }
@@ -266,6 +272,8 @@ public abstract class Parsing<I> {
      * <br/><br/>
      * An {@link Error} may lead to backtracking during parsing. In particular, when a {@link ChoiceParser} fails with
      * an {@link Error} on its first alternative, it tries to apply the second one.
+     * <br/><br/>
+     * <b>Note</b>: This class is intended to be immutable and hence covariant in its type parameter.
      *
      * @see Result
      * @see Failure
@@ -273,11 +281,11 @@ public abstract class Parsing<I> {
      *
      * @author Björn Lötters
      *
-     * @param <T> The type of the parsed value, which is unused in case of an {@link Error}.
+     * @param <T> The covariant type of the parsed value, which is unused in case of an {@link Error}.
      */
     public final class Error<T> extends Failure<T> {
 
-        public Error(final String message, final Input<I> rest) {
+        public Error(final String message, final Input<? extends I> rest) {
             super(message, rest);
         }
 
@@ -293,6 +301,8 @@ public abstract class Parsing<I> {
      * <br/><br/>
      * An {@link Abort} prevents backtracking during parsing. In particular, when a {@link ChoiceParser} fails with
      * an {@link Abort} on its first alternative, it does not attempt to apply the second one.
+     * <br/><br/>
+     * <b>Note</b>: This class is intended to be immutable and hence covariant in its type parameter.
      *
      * @see Result
      * @see Failure
@@ -300,11 +310,11 @@ public abstract class Parsing<I> {
      *
      * @author Björn Lötters
      *
-     * @param <T> The type of the parsed value, which is unused in case of an {@link Abort}.
+     * @param <T> The covariant type of the parsed value, which is unused in case of an {@link Abort}.
      */
     public final class Abort<T> extends Failure<T> {
 
-        public Abort(final String message, final Input<I> rest) {
+        public Abort(final String message, final Input<? extends I> rest) {
             super(message, rest);
         }
 
@@ -322,12 +332,14 @@ public abstract class Parsing<I> {
      * and produces a {@link Result}. In order to implement a {@link Parser} it therefore suffices to implement the
      * {@link Parser#apply} method.
      * <br/><br/>
+     * <b>Note</b>: This class is intended to be immutable and hence covariant in its type parameter.
+     * <br/><br/>
      * <b>Implementation Note</b>: Unfortunately, Java does not support instance interfaces which is why this class is not a
      * {@link FunctionalInterface} and we cannot use the lambda syntax to implement a {@link Parser}.
      *
      * @author Björn Lötters
      *
-     * @param <T> The type of the value that is the result of running this {@link Parser}.
+     * @param <T> The covariant type of the value that is the result of running this {@link Parser}.
      */
     public abstract class Parser<T> implements Function<Input<I>, Result<T>> {
 
@@ -433,7 +445,7 @@ public abstract class Parsing<I> {
          * @see #choice
          * @see #and
          */
-        public final Parser<T> or(final Parser<T> parser) {
+        public final Parser<T> or(final Parser<? extends T> parser) {
             return choice(this, parser);
         }
 
@@ -577,8 +589,9 @@ public abstract class Parsing<I> {
      * @see Input
      * @see Result
      */
-    public final <T> Result<T> parse(final Parser<T> parser, final Input<I> input) {
-        final Result<T> result = parser.apply(skip(input));
+    public final <T> Result<T> parse(final Parser<? extends T> parser, final Input<? extends I> input) {
+        @SuppressWarnings("unchecked") // The type is assumed to be immutable and hence covariant
+        final Result<T> result = (Result<T>) parser.apply(skip(input));
 
         if (result.isSuccess()) {
             final Input<I> rest = skip(result.rest);
@@ -599,13 +612,15 @@ public abstract class Parsing<I> {
      * @return The {@link Input} that remains after skipping.
      * @see #setSkipParser(Parser)
      */
-    public final Input<I> skip(final Input<I> input) {
+    public final Input<I> skip(final Input<? extends I> input) {
+        @SuppressWarnings("unchecked") // The type is assumed to be immutable and hence covariant
+        final Input<I> up = (Input<I>) input;
         if (skipping) {
-            return input;
+            return up;
         } else {
             skipping = true;
             try {
-                return skip.apply(input).rest;
+                return skip.apply(up).rest;
             } finally {
                 skipping = false;
             }
@@ -621,7 +636,7 @@ public abstract class Parsing<I> {
      * @throws NullPointerException If the provided {@link Parser} is {@code null}.
      * @see #skip(Input)
      */
-    public final <T> void setSkipParser(final Parser<T> parser) throws NullPointerException {
+    public final <T> void setSkipParser(final Parser<? extends T> parser) throws NullPointerException {
         if (parser == null) {
             throw new NullPointerException();
         } else {
@@ -640,7 +655,7 @@ public abstract class Parsing<I> {
      * @see Input
      * @see Function
      */
-    public final <T> Parser<T> lift(final Function<Input<I>, Result<T>> function) {
+    public final <T> Parser<T> lift(final Function<? super Input<I>, ? extends Result<T>> function) {
         return new Parser<T>() {
 
             @Override
@@ -677,7 +692,7 @@ public abstract class Parsing<I> {
      * @return A {@link Parser} that always succeeds with a {@link Success}.
      * @param <T> The type of the value that should be returned by {@link Parser}.
      */
-    public final <T> Parser<T> success(final Supplier<T> supplier) {
+    public final <T> Parser<T> success(final Supplier<? extends T> supplier) {
         return lift(input -> new Success<>(supplier.get(), input));
     }
 
@@ -693,7 +708,7 @@ public abstract class Parsing<I> {
         Parser<T> choice = error("empty choice");
 
         for (final Parser<? extends T> parser : parsers) {
-            @SuppressWarnings("unchecked")
+            @SuppressWarnings("unchecked") // The type is assumed to be immutable and hence covariant
             final Parser<T> up = (Parser<T>) parser;
             choice = new ChoiceParser<>(choice, up);
         }
@@ -743,7 +758,7 @@ public abstract class Parsing<I> {
         return element.and(separator.and(element).repeat()).map(product -> {
             T result = product.first();
 
-            for (Product<BiFunction<T, T, T>, T> next : product.second()) {
+            for (final Product<BiFunction<T, T, T>, T> next : product.second()) {
                 result = next.first().apply(result, next.second());
             }
 
@@ -790,7 +805,7 @@ public abstract class Parsing<I> {
      */
     public final <T> Parser<T> chainRight1(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
         return element.and(separator.and(element).repeat()).map(product -> {
-            final Iterator<Product<BiFunction<T, T, T>, T>> iterator = product.second().reversed().iterator();
+            final Iterator<? extends Product<BiFunction<T, T, T>, T>> iterator = product.second().reversed().iterator();
 
             if (iterator.hasNext()) {
                 final Product<BiFunction<T, T, T>, T> first = iterator.next();
@@ -854,7 +869,7 @@ public abstract class Parsing<I> {
      *         provided by the {@link Supplier}.
      * @param <T> The type of the {@link Result}.
      */
-    public final <T> Parser<T> lazy(final Supplier<Parser<T>> supplier) {
+    public final <T> Parser<T> lazy(final Supplier<Parser<? extends T>> supplier) {
         return new LazyParser<T>(supplier);
     }
 
@@ -910,7 +925,7 @@ public abstract class Parsing<I> {
                     };
 
                 case Failure<Parser<U>> failure -> {
-                    @SuppressWarnings("unchecked")
+                    @SuppressWarnings("unchecked")  // A failure does not carry a value of its type parameter
                     final Failure<U> result = (Failure<U>) failure;
                     yield result;
                 }
@@ -953,30 +968,32 @@ public abstract class Parsing<I> {
 
     private final class LazyParser<T> extends Parser<T> {
 
-        private final Supplier<Parser<T>> supplier;
+        private final Supplier<Parser<? extends T>> supplier;
 
         private Parser<T> parser = null;
 
-        public LazyParser(final Supplier<Parser<T>> supplier) {
+        public LazyParser(final Supplier<Parser<? extends T>> supplier) {
             this.supplier = supplier;
+        }
+
+        private Parser<T> get() {
+            if (parser == null) {
+                @SuppressWarnings("unchecked") // The type is assumed to be immutable and hence covariant
+                final Parser<T> up = (Parser<T>) supplier.get();
+                parser = up;
+            }
+
+            return parser;
         }
 
         @Override
         public Description description() {
-            if (parser == null) {
-                parser = supplier.get();
-            }
-
-            return parser.description();
+            return get().description();
         }
 
         @Override
         public Result<T> apply(final Input<I> input) {
-            if (parser == null) {
-                parser = supplier.get();
-            }
-
-            return parser.apply(skip(input));
+            return get().apply(skip(input));
         }
 
     }

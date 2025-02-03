@@ -17,9 +17,13 @@ import java.util.stream.StreamSupport;
 /**
  * An abstract representation of an {@link Input} for parsing. In most cases, this will be a {@link CharacterInput}, which
  * is an {@link Input} of {@link Character}s and can be considered a sequence of characters (just like a {@link String}).
- * @param <T> The element type for this {@link Input}. In most cases this type equals {@link Character}.
+ * <br/><br/>
+ * <b>Note</b>: This class is intended to be immutable and hence covariant in its type parameter.
+ * @param <T> The covariant element type for this {@link Input}. In most cases this type equals {@link Character}.
  *
  * @see Parser
+ * @see CharacterInput
+ * @see StreamInput
  *
  * @author Björn Lötters
  */
