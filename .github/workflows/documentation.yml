@@ -1,0 +1,28 @@
+name: Documentation
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  documentation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: Install MkDocs
+        run: pip install mkdocs
+
+      - name: Build Documentation
+        run: mkdocs build
+        working-directory: ./documentation
+

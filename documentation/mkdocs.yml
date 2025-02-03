@@ -1,1 +1,4 @@
 site_name: Jar Jar Parse - Documentation
+theme: readthedocs
+nav:
+  - Home: index.md
