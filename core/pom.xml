@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.github.bjoernloetters</groupId>
         <artifactId>jjparse</artifactId>
-        <version>1.0.3</version>
+        <version>1.0.4</version>
     </parent>
 
     <artifactId>jjparse-core</artifactId>
@@ -96,6 +96,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <passphrase>${env.MAVEN_GPG_PASSPHRASE}</passphrase>
                     <gpgArguments>
                         <arg>--pinentry-mode</arg>
                         <arg>loopback</arg>
