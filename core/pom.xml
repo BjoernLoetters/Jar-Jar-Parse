@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.github.bjoernloetters</groupId>
         <artifactId>jjparse</artifactId>
-        <version>1.0.4</version>
+        <version>1.0.5</version>
     </parent>
 
     <artifactId>jjparse-core</artifactId>
@@ -81,27 +81,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <passphrase>${env.MAVEN_GPG_PASSPHRASE}</passphrase>
-                    <gpgArguments>
-                        <arg>--pinentry-mode</arg>
-                        <arg>loopback</arg>
-                    </gpgArguments>
-                </configuration>
             </plugin>
         </plugins>
     </build>
