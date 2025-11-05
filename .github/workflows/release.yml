@@ -32,13 +32,18 @@ jobs:
       - name: Generate Sources JAR
         run: mvn -pl core source:jar -DskipTests -Dgpg.skip=true
 
+      - name: Get release version
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Upload Release
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           draft: false
           prerelease: false
-          title: "Release ${{ github.ref_name }}"
+          title: "Release ${{ env.VERSION }}"
           files: |
             LICENSE
             core/target/*.jar

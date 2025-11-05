@@ -26,13 +26,16 @@ jobs:
           gpg-passphrase: ${{ secrets.GPG_SIGNING_KEY_PASSWORD }}
 
       - name: Get release version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        run: |
+          REF="${{ github.event.workflow_run.head_branch }}"
+          VERSION="${REF#v}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Set release version
         run: mvn versions:set -DnewVersion=${{ env.VERSION }}
 
       - name: Publish package
-        run: mvn -pl core --batch-mode deploy -DaltDeploymentRepository=maven-central::default::https://central.sonatype.com/api/publish/maven -DskipTests
+        run: mvn -pl core -am --batch-mode deploy -DaltDeploymentRepository=maven-central::default::https://central.sonatype.com/api/publish/maven -DskipTests
         env:
           MAVEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
