@@ -23,7 +23,6 @@ jobs:
           server-username: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
           server-password: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
           gpg-private-key: ${{ secrets.GPG_SIGNING_KEY }}
-          gpg-passphrase: ${{ secrets.GPG_SIGNING_KEY_PASSWORD }}
 
       - name: Get release version
         run: |
