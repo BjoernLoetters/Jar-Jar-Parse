@@ -20,8 +20,8 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           server-id: central
-          server-username: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
-          server-password: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
           gpg-private-key: ${{ secrets.GPG_SIGNING_KEY }}
 
       - name: Get release version
