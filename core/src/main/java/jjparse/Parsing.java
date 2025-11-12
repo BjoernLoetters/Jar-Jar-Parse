@@ -399,8 +399,8 @@ public abstract class Parsing<I> {
          * @return A {@link Parser} which first parses this and then the provided one, returning the {@link Product} of
          *         their returned values on {@link Success}.
          * @param <U> The type of the second {@link Parser}'s {@link Result}.
-         * @see #keepLeft
-         * @see #keepRight
+         * @see #andl
+         * @see #andr
          * @see #flatMap
          * @see #or
          * @see #sequence
@@ -415,10 +415,10 @@ public abstract class Parsing<I> {
          * @return A {@link Parser} which first parses this and then the provided one, returning the value of this
          *         {@link Parser} only.
          * @param <U> The type of the second {@link Parser}'s {@link Result}.
-         * @see #keepRight
+         * @see #andr
          * @see #and
          */
-        public final <U> Parser<T> keepLeft(final Parser<U> right) {
+        public final <U> Parser<T> andl(final Parser<U> right) {
             return flatMap(result -> right.map(ignore -> result));
         }
 
@@ -428,10 +428,10 @@ public abstract class Parsing<I> {
          * @return A {@link Parser} which first parses this and then the provided one, returning the value of the
          *         provided {@link Parser} only.
          * @param <U> The type of the second {@link Parser}'s {@link Result}.
-         * @see #keepLeft
+         * @see #andl
          * @see #and
          */
-        public final <U> Parser<U> keepRight(final Parser<U> right) {
+        public final <U> Parser<U> andr(final Parser<U> right) {
             return flatMap(ignore -> right);
         }
 
@@ -532,7 +532,7 @@ public abstract class Parsing<I> {
          * @see #and
          */
         public final Parser<T> between(final Parser<?> left, final Parser<?> right) {
-            return left.keepRight(this).keepLeft(right);
+            return left.andr(this).andl(right);
         }
 
         /**

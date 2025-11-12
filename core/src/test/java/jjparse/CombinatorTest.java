@@ -45,39 +45,39 @@ public final class CombinatorTest extends ParserTest {
     }
 
     @Test
-    public void keepRightSuccessTest() {
+    public void andrSuccessTest() {
         Parser<Character> first = character('a');
         Parser<Character> second = character('b');
-        Parser<Character> parser = first.keepRight(second);
+        Parser<Character> parser = first.andr(second);
 
         assertSuccess(parser, 'b', "ab");
     }
 
     @Test
-    public void keepRightFailureTest() {
+    public void andrFailureTest() {
         Parser<Character> first = character('a');
         Parser<Character> second = character('b');
-        Parser<Character> parser = first.keepRight(second);
+        Parser<Character> parser = first.andr(second);
 
-        assertFailure(parser, "syntax error in Test 'keepRightFailureTest' at line 1 and column 2: unexpected character 'c', expected the literal 'b'", "ac");
+        assertFailure(parser, "syntax error in Test 'andrFailureTest' at line 1 and column 2: unexpected character 'c', expected the literal 'b'", "ac");
     }
 
     @Test
-    public void keepLeftSuccessTest() {
+    public void andlSuccessTest() {
         Parser<Character> first = character('a');
         Parser<Character> second = character('b');
-        Parser<Character> parser = first.keepLeft(second);
+        Parser<Character> parser = first.andl(second);
 
         assertSuccess(parser, 'a', "ab");
     }
 
     @Test
-    public void keepLeftFailureTest() {
+    public void andlFailureTest() {
         Parser<Character> first = character('a');
         Parser<Character> second = character('b');
-        Parser<Character> parser = first.keepLeft(second);
+        Parser<Character> parser = first.andl(second);
 
-        assertFailure(parser, "syntax error in Test 'keepLeftFailureTest' at line 1 and column 2: unexpected character 'c', expected the literal 'b'", "ac");
+        assertFailure(parser, "syntax error in Test 'andlFailureTest' at line 1 and column 2: unexpected character 'c', expected the literal 'b'", "ac");
     }
 
     @Test

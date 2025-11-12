@@ -28,7 +28,7 @@ public final class Example extends StringParsing {
     public final Parser<JsonArray> jsonArray = jsonValue().separate(literal(",")).between(literal("["), literal("]").commit())
         .map(values -> values.toArray(new JsonValue[0])).map(JsonArray::new);
 
-    private final Parser<Product<String, JsonValue>> jsonObjectMember = string.keepLeft(literal(":")).and(jsonValue());
+    private final Parser<Product<String, JsonValue>> jsonObjectMember = string.andl(literal(":")).and(jsonValue());
 
     public final Parser<JsonObject> jsonObject = jsonObjectMember.separate(literal(",")).between(literal("{"), literal("}").commit())
         .map(tuples -> new JsonObject(tuples.stream().collect(Collectors.toMap(Product::first, Product::second))));

@@ -36,7 +36,7 @@ If you are already using `maven`, just copy and paste the following dependency t
 <dependency>
     <groupId>io.github.bjoernloetters</groupId>
     <artifactId>jjparse-core</artifactId>
-    <version>1.0.12</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
@@ -45,7 +45,7 @@ Thanks to the widespread use of the Maven Central Repository, you can also inclu
    <summary>Gradle</summary>
 
    ```
-   implementation group: 'io.github.bjoernloetters', name: 'jjparse-core', version: '1.0.12'
+   implementation group: 'io.github.bjoernloetters', name: 'jjparse-core', version: '1.1.0'
    ```
    
 </details>
@@ -53,7 +53,7 @@ Thanks to the widespread use of the Maven Central Repository, you can also inclu
    <summary>SBT</summary>
 
    ```scala
-    libraryDependencies += "io.github.bjoernloetters" % "jjparse-core" % "1.0.12"
+    libraryDependencies += "io.github.bjoernloetters" % "jjparse-core" % "1.1.0"
    ```
 
 </details>
@@ -61,7 +61,7 @@ Thanks to the widespread use of the Maven Central Repository, you can also inclu
    <summary>Ivy</summary>
 
    ```xml
-   <dependency org="io.github.bjoernloetters" name="jjparse-core" rev="1.0.12"/>
+   <dependency org="io.github.bjoernloetters" name="jjparse-core" rev="1.1.0"/>
    ```
    
 </details>
@@ -105,7 +105,7 @@ public class MyParser extends StringParsing {
     public Parser<Integer> number = regex("[+-]?[0-9]+").map(Integer::parseInt);
 
     // A parser which parses additions and returns their result.
-    public Parser<Integer> add = number.keepLeft(character('+')).and(number)
+    public Parser<Integer> add = number.andl(character('+')).and(number)
             .map(product -> product.first() + product.second());
 
     public static void main(final String[] arguments) {
