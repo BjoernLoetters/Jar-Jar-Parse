@@ -1021,7 +1021,11 @@ public abstract class Parsing<I> {
                 result = parser.apply(skip(result.rest));
             }
 
-            return new Success<>(Collections.unmodifiableList(elements), result.rest);
+            return switch (result) {
+                // We have to report this abort nevertheless
+                case Abort<T> abort -> new Abort<>(abort.message, abort.rest);
+                default -> new Success<>(Collections.unmodifiableList(elements), result.rest);
+            };
         }
 
     }
