@@ -495,10 +495,10 @@ public abstract class Parsing<I> {
          * @see #repeat
          * @see #repeat1
          * @see #separate
-         * @see #chainLeft
-         * @see #chainLeft1
-         * @see #chainRight
-         * @see #chainRight1
+         * @see #chainl
+         * @see #chainl1
+         * @see #chainr
+         * @see #chainr1
          */
         public final Parser<List<T>> separate1(final Parser<?> separator) {
             return this.and(separator.and(this).repeat()).map(product -> product.map(Stream::of, list -> list.stream().map(Product::second)).fold(Stream::concat).toList());
@@ -514,10 +514,10 @@ public abstract class Parsing<I> {
          * @see #repeat
          * @see #repeat1
          * @see #separate1
-         * @see #chainLeft
-         * @see #chainLeft1
-         * @see #chainRight
-         * @see #chainRight1
+         * @see #chainl
+         * @see #chainl1
+         * @see #chainr
+         * @see #chainr1
          */
         public final Parser<List<T>> separate(final Parser<?> separator) {
             return separate1(separator).optional().map(result -> result.orElseGet(List::of));
@@ -565,6 +565,107 @@ public abstract class Parsing<I> {
          */
         public final Parser<T> log(final String name) {
             return new LogParser<>(name, this);
+        }
+
+        /**
+         * Just like {@link Parser#separate1}, this method separates this {@link Parser} using the separator
+         * {@link Parser}. However, instead of returning a {@link List} of the parsed elements, the elements are folded from
+         * left to right into a single element using the {@link BiFunction}s returned by the separator {@link Parser}. This
+         * is especially useful for parsing left-associative chains of operators such as {@code 1 + 2 + 3}.
+         * @param separator The separator {@link Parser} which must return a {@link BiFunction} that combines any two elements.
+         * @return A {@link Parser} which behaves similar to {@link Parser#separate1} but combines all elements into
+         *         a single one.
+         * @see Parser#separate1
+         * @see #chainl
+         * @see #chainr
+         * @see #chainr1
+         * @see BiFunction
+         */
+        public final Parser<T> chainl1(final Parser<BiFunction<T, T, T>> separator) {
+            return this.and(separator.and(this).repeat()).map(product -> {
+                T result = product.first();
+
+                for (final Product<BiFunction<T, T, T>, T> next : product.second()) {
+                    result = next.first().apply(result, next.second());
+                }
+
+                return result;
+            });
+        }
+
+        /**
+         * Just like {@link Parser#separate}, this method separates this {@link Parser} using the separator
+         * {@link Parser}. However, instead of returning a {@link List} of the parsed elements, the elements are folded from
+         * left to right into a single element using the {@link BiFunction}s returned by the separator {@link Parser}. This
+         * is especially useful for parsing left-associative chains of operators such as {@code 1 + 2 + 3}.
+         * @param separator The separator {@link Parser} which must return a {@link BiFunction} that combines any two elements.
+         * @param otherwise The element that should be returned when there is no single element in the chain.
+         * @return A {@link Parser} which behaves similar to {@link Parser#separate} but combines all elements into
+         *         a single one.
+         * @see Parser#separate
+         * @see #chainl1
+         * @see #chainr
+         * @see #chainr1
+         * @see BiFunction
+         */
+        public final Parser<T> chainl(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator, final T otherwise) {
+            return this.chainl1(separator).optional().map(result -> result.orElse(otherwise));
+        }
+
+        /**
+         * Just like {@link Parser#separate1}, this method separates this {@link Parser} using the separator
+         * {@link Parser}. However, instead of returning a {@link List} of the parsed elements, the elements are folded from
+         * right to left into a single element using the {@link BiFunction}s returned by the separator {@link Parser}. This
+         * is especially useful for parsing right-associative chains of operators such as {@code a = b = c}.
+         * @param separator The separator {@link Parser} which must return a {@link BiFunction} that combines any two elements.
+         * @return A {@link Parser} which behaves similar to {@link Parser#separate1} but combines all elements into
+         *         a single one.
+         * @see Parser#separate1
+         * @see #chainl
+         * @see #chainl1
+         * @see #chainr
+         * @see BiFunction
+         */
+        public final Parser<T> chainr1(final Parser<BiFunction<T, T, T>> separator) {
+            return this.and(separator.and(this).repeat()).map(product -> {
+                final Iterator<? extends Product<BiFunction<T, T, T>, T>> iterator = product.second().reversed().iterator();
+
+                if (iterator.hasNext()) {
+                    final Product<BiFunction<T, T, T>, T> first = iterator.next();
+                    T result = first.second();
+                    BiFunction<T, T, T> combiner = first.first();
+
+                    while (iterator.hasNext()) {
+                        final Product<BiFunction<T, T, T>, T> next = iterator.next();
+                        result = combiner.apply(next.second(), result);
+                        combiner = next.first();
+                    }
+
+                    result = combiner.apply(product.first(), result);
+                    return result;
+                } else {
+                    return product.first();
+                }
+            });
+        }
+
+        /**
+         * Just like {@link Parser#separate}, this method separates this {@link Parser} using the separator
+         * {@link Parser}. However, instead of returning a {@link List} of the parsed elements, the elements are folded from
+         * right to left into a single element using the {@link BiFunction}s returned by the separator {@link Parser}. This
+         * is especially useful for parsing right-associative chains of operators such as {@code a = b = c}.
+         * @param separator The separator {@link Parser} which must return a {@link BiFunction} that combines any two elements.
+         * @param otherwise The element that should be returned when there is no single element in the chain.
+         * @return A {@link Parser} which behaves similar to {@link Parser#separate} but combines all elements into
+         *         a single one.
+         * @see Parser#separate
+         * @see #chainl
+         * @see #chainl1
+         * @see #chainr1
+         * @see BiFunction
+         */
+        public final Parser<T> chainr(final Parser<BiFunction<T, T, T>> separator, final T otherwise) {
+            return this.chainr1(separator).optional().map(result -> result.orElse(otherwise));
         }
 
     }
@@ -736,115 +837,6 @@ public abstract class Parsing<I> {
         }
 
         return sequence.map(Collections::unmodifiableList);
-    }
-
-    /**
-     * Just like {@link Parser#separate1}, this method separates the element {@link Parser} using the separator
-     * {@link Parser}. However, instead of returning a {@link List} of the parsed elements, the elements are folded from
-     * left to right into a single element using the {@link BiFunction}s returned by the separator {@link Parser}. This
-     * is especially useful for parsing left-associative chains of operators such as {@code 1 + 2 + 3}.
-     * @param element The element {@link Parser}.
-     * @param separator The separator {@link Parser} which must return a {@link BiFunction} that combines any two elements.
-     * @return A {@link Parser} which behaves similar to {@link Parser#separate1} but combines all elements into
-     *         a single one.
-     * @param <T> The type of the elements.
-     * @see Parser#separate1
-     * @see #chainLeft
-     * @see #chainRight 
-     * @see #chainRight1
-     * @see BiFunction
-     */
-    public final <T> Parser<T> chainLeft1(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
-        return element.and(separator.and(element).repeat()).map(product -> {
-            T result = product.first();
-
-            for (final Product<BiFunction<T, T, T>, T> next : product.second()) {
-                result = next.first().apply(result, next.second());
-            }
-
-            return result;
-        });
-    }
-
-    /**
-     * Just like {@link Parser#separate}, this method separates the element {@link Parser} using the separator
-     * {@link Parser}. However, instead of returning a {@link List} of the parsed elements, the elements are folded from
-     * left to right into a single element using the {@link BiFunction}s returned by the separator {@link Parser}. This
-     * is especially useful for parsing left-associative chains of operators such as {@code 1 + 2 + 3}.
-     * @param element The element {@link Parser}.
-     * @param separator The separator {@link Parser} which must return a {@link BiFunction} that combines any two elements.
-     * @param otherwise The element that should be returned when there is no single element in the chain.
-     * @return A {@link Parser} which behaves similar to {@link Parser#separate} but combines all elements into
-     *         a single one.
-     * @param <T> The type of the elements.
-     * @see Parser#separate
-     * @see #chainLeft1
-     * @see #chainRight
-     * @see #chainRight1
-     * @see BiFunction
-     */
-    public final <T> Parser<T> chainLeft(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator, final T otherwise) {
-        return chainLeft1(element, separator).optional().map(result -> result.orElse(otherwise));
-    }
-
-    /**
-     * Just like {@link Parser#separate1}, this method separates the element {@link Parser} using the separator
-     * {@link Parser}. However, instead of returning a {@link List} of the parsed elements, the elements are folded from
-     * right to left into a single element using the {@link BiFunction}s returned by the separator {@link Parser}. This
-     * is especially useful for parsing right-associative chains of operators such as {@code a = b = c}.
-     * @param element The element {@link Parser}.
-     * @param separator The separator {@link Parser} which must return a {@link BiFunction} that combines any two elements.
-     * @return A {@link Parser} which behaves similar to {@link Parser#separate1} but combines all elements into
-     *         a single one.
-     * @param <T> The type of the elements.
-     * @see Parser#separate1
-     * @see #chainLeft
-     * @see #chainLeft1
-     * @see #chainRight
-     * @see BiFunction
-     */
-    public final <T> Parser<T> chainRight1(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator) {
-        return element.and(separator.and(element).repeat()).map(product -> {
-            final Iterator<? extends Product<BiFunction<T, T, T>, T>> iterator = product.second().reversed().iterator();
-
-            if (iterator.hasNext()) {
-                final Product<BiFunction<T, T, T>, T> first = iterator.next();
-                T result = first.second();
-                BiFunction<T, T, T> combiner = first.first();
-
-                while (iterator.hasNext()) {
-                    final Product<BiFunction<T, T, T>, T> next = iterator.next();
-                    result = combiner.apply(next.second(), result);
-                    combiner = next.first();
-                }
-
-                result = combiner.apply(product.first(), result);
-                return result;
-            } else {
-                return product.first();
-            }
-        });
-    }
-
-    /**
-     * Just like {@link Parser#separate}, this method separates the element {@link Parser} using the separator
-     * {@link Parser}. However, instead of returning a {@link List} of the parsed elements, the elements are folded from
-     * right to left into a single element using the {@link BiFunction}s returned by the separator {@link Parser}. This
-     * is especially useful for parsing right-associative chains of operators such as {@code a = b = c}.
-     * @param element The element {@link Parser}.
-     * @param separator The separator {@link Parser} which must return a {@link BiFunction} that combines any two elements.
-     * @param otherwise The element that should be returned when there is no single element in the chain.
-     * @return A {@link Parser} which behaves similar to {@link Parser#separate} but combines all elements into
-     *         a single one.
-     * @param <T> The type of the elements.
-     * @see Parser#separate
-     * @see #chainLeft
-     * @see #chainLeft1
-     * @see #chainRight1
-     * @see BiFunction
-     */
-    public final <T> Parser<T> chainRight(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator, final T otherwise) {
-        return chainRight1(element, separator).optional().map(result -> result.orElse(otherwise));
     }
 
     /**

@@ -161,19 +161,19 @@ public final class CombinatorTest extends ParserTest {
     }
 
     @Test
-    public void chainLeftSuccessTest() {
+    public void chainl1SuccessTest() {
         final Parser<Integer> number = regex("[0-9]").map(Integer::parseInt);
         final Parser<BiFunction<Integer, Integer, Integer>> plus = character('+').map(op -> Integer::sum);
-        final Parser<Integer> parser = chainLeft1(number, plus);
+        final Parser<Integer> parser = number.chainl1(plus);
 
         assertSuccess(parser, 6, "1+2+3");
     }
 
     @Test
-    public void chainRightSuccessTest() {
+    public void chainr1() {
         final Parser<Integer> number = regex("[0-9]").map(Integer::parseInt);
         final Parser<BiFunction<Integer, Integer, Integer>> exponent = character('^').map(op -> (a, b) -> (int) Math.pow(a, b));
-        final Parser<Integer> parser = chainRight1(number, exponent);
+        final Parser<Integer> parser = number.chainr1(exponent);
 
         assertSuccess(parser, 2, "2^3^0");
     }
