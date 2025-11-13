@@ -1,4 +1,37 @@
-site_name: Jar Jar Parse - Documentation
-theme: readthedocs
+site_name: Jar Jar Parse - Parser Combinators for Java
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.expand
+    - search.highlight
+    - search.suggest
+
+markdown_extensions:
+  - footnotes
+  - admonition
+  - codehilite
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/BjoernLoetters
+
+repo_url: https://github.com/BjoernLoetters/Jar-Jar-Parse
+repo_name: BjoernLoetters/Jar-Jar-Parse
+repo_icon: fontawesome/brands/github
+
 nav:
-  - Home: index.md
+  - Home:
+      - Overview: index.md
+      - Installation: home/installation.md
+      - Getting Started: home/getting-started.md
+  - Tutorial:
+      - Introduction to Parser Combinators: tutorial/introduction-to-parser-combinators.md
+      - Building Your First Parser: tutorial/building-your-first-parser.md
+  - API Reference: https://bjoernloetters.github.io/Jar-Jar-Parse/docs/javadoc/index.html

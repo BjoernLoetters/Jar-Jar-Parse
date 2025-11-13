@@ -1,9 +1,10 @@
 name: Documentation
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_run:
+    workflows: [ "Publish on Maven Central" ]
+    types:
+      - completed
 
 jobs:
   documentation:
@@ -15,12 +16,28 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Build Javadoc with Maven
+        run: mvn -B javadoc:javadoc
+
+      - name: Prepare Javadoc for MkDocs
+        run: |
+          mkdir -p documentation/docs/javadoc
+          rsync -av target/site/apidocs/ documentation/docs/javadoc/
+
       - uses: actions/setup-python@v5
         with:
           python-version: 3.9
 
       - name: Install MkDocs
-        run: pip install mkdocs
+        run: |
+          pip install mkdocs
+          pip install mkdocs-material
 
       - name: Build Documentation
         run: mkdocs build
