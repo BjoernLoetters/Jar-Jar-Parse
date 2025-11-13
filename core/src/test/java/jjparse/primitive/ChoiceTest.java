@@ -37,4 +37,14 @@ public final class ChoiceTest extends ParserTest {
         assertFailure(parser, "syntax error in Test 'emptyChoiceTest' at line 1 and column 1: unexpected end of input, expected an input that matches '[0-9]' or an input that matches '[a-z]'", "");
     }
 
+    @Test
+    public void abortFirstChoiceTest() {
+        assertFailure(choice(first.commit(), second), "syntax error in Test 'abortFirstChoiceTest' at line 1 and column 1: unexpected character 'a', expected an input that matches '[0-9]'", "a");
+    }
+
+    @Test
+    public void abortSecondChoiceTest() {
+        assertFailure(choice(first, second.commit()), "syntax error in Test 'abortSecondChoiceTest' at line 1 and column 1: unexpected character '@', expected an input that matches '[a-z]'", "@");
+    }
+
 }

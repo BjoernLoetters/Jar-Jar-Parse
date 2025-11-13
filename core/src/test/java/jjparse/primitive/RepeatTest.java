@@ -36,4 +36,9 @@ public final class RepeatTest extends ParserTest {
         assertSuccess(noMatchParser, List.of(), "abc");
     }
 
+    @Test
+    public void repeatAbortTest() {
+        assertFailure(charParser.commit().repeat(), "syntax error in Test 'repeatAbortTest' at line 1 and column 1: unexpected character '1', expected an input that matches '[a-z]'", "123");
+    }
+
 }
