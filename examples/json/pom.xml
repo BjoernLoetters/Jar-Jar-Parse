@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.github.bjoernloetters</groupId>
         <artifactId>jjparse-examples</artifactId>
-        <version>1.2.2</version>
+        <version>1.2.3</version>
     </parent>
 
     <name>${project.parent.name} - Examples - JSON</name>

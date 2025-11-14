@@ -35,11 +35,6 @@ jobs:
       - name: Build Javadoc with Maven
         run: mvn -B -pl core javadoc:javadoc -DskipTests -Dgpg.skip=true
 
-      - name: Prepare Javadoc for MkDocs
-        run: |
-          mkdir documentation/docs/javadoc
-          rsync -av core/target/reports/apidocs documentation/docs/javadoc/
-
       - uses: actions/setup-python@v5
         with:
           python-version: 3.9
@@ -52,6 +47,11 @@ jobs:
       - name: Build Documentation
         working-directory: ./documentation
         run: mkdocs build --strict
+
+      - name: Sync Javadoc with MkDocs
+        run: |
+          mkdir -p documentation/site/javadoc
+          rsync -av core/target/reports/apidocs/ documentation/site/javadoc/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
