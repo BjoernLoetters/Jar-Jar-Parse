@@ -1,10 +1,15 @@
-![Unit Test](https://github.com/BjoernLoetters/Java-Parser-Combinators/actions/workflows/test.yml/badge.svg?branch=main)
-![License](https://img.shields.io/github/license/BjoernLoetters/Jar-Jar-Parse?label=License&logo=github)
-![Release](https://img.shields.io/github/v/release/BjoernLoetters/Java-Parser-Combinators?label=Release&logo=github)
-![Maven](https://img.shields.io/maven-central/v/io.github.bjoernloetters/jjparse-core?label=Maven%20Central&logo=github)
+![Unit Test](https://img.shields.io/github/actions/workflow/status/BjoernLoetters/Jar-Jar-Parse/test.yml?branch=main&label=Unit%20Test&logo=github&color=light-green)
+[![License](https://img.shields.io/github/license/BjoernLoetters/Jar-Jar-Parse?label=License&logo=github&color=light-green)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/BjoernLoetters/Java-Parser-Combinators?label=Release&logo=git&logoColor=white)](https://github.com/BjoernLoetters/Jar-Jar-Parse/releases)
+[![Maven](https://img.shields.io/maven-central/v/io.github.bjoernloetters/jjparse-core?label=Maven%20Central&logo=apache-maven&logoColor=white)](https://central.sonatype.com/artifact/io.github.bjoernloetters/jjparse-core)
+[![Documentation](https://img.shields.io/badge/docs-online-blue?color=teal&label=Documentation)](https://bjoernloetters.github.io/Jar-Jar-Parse/)
+[![Javadoc](https://img.shields.io/badge/api-reference-green?color=teal&label=API)](https://bjoernloetters.github.io/Jar-Jar-Parse/javadoc/)
 
 # Jar Jar Parse
 *"Yousa needin’ a parser? Meesa help!"*
+
+[📚 **Documentation**](https://bjoernloetters.github.io/Jar-Jar-Parse/)  
+[📖 **API Reference**](https://bjoernloetters.github.io/Jar-Jar-Parse/javadoc/)
 
 ### 🚀 What is Jar Jar Parse?
 **Jar Jar Parse** (or **JJParse** for short) is a lightweight library designed for the rapid prototyping of parsers in Java.
@@ -161,6 +166,13 @@ As with any parsing method, things don’t always go smoothly.
 A parsing attempt can fail, which is why a `Result<U>` may either be a `Success<U>` (containing the successful result) or a `Failure<U>` (containing an error message).
 
 This approach, while simple, provides flexibility and expressiveness that traditional parser generators often lack, making it an ideal solution for day-to-day parsing tasks.
+
+## Documentation
+
+The full documentation is available at:
+
+- Getting started, user guide & examples: https://bjoernloetters.github.io/Jar-Jar-Parse/
+- API reference (Javadoc): https://bjoernloetters.github.io/Jar-Jar-Parse/javadoc/
 
 ### 🤝 Contributing
 
