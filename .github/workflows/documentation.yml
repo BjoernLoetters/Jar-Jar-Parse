@@ -2,12 +2,22 @@ name: Documentation
 
 on:
   workflow_run:
-    workflows: [ "Publish on Maven Central" ]
+    workflows: [ "Release" ]
     types:
       - completed
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
-  documentation:
+  build:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -23,12 +33,12 @@ jobs:
           java-version: '21'
 
       - name: Build Javadoc with Maven
-        run: mvn -B javadoc:javadoc
+        run: mvn -B -pl core javadoc:javadoc -DskipTests -Dgpg.skip=true
 
       - name: Prepare Javadoc for MkDocs
         run: |
-          mkdir -p documentation/docs/javadoc
-          rsync -av target/site/apidocs/ documentation/docs/javadoc/
+          mkdir documentation/docs/javadoc
+          rsync -av core/target/reports/apidocs documentation/docs/javadoc/
 
       - uses: actions/setup-python@v5
         with:
@@ -40,6 +50,22 @@ jobs:
           pip install mkdocs-material
 
       - name: Build Documentation
-        run: mkdocs build
         working-directory: ./documentation
+        run: mkdocs build --strict
 
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: documentation/site
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
