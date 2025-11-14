@@ -35,4 +35,4 @@ nav:
   - Tutorial:
       - Introduction to Parser Combinators: tutorial/introduction-to-parser-combinators.md
       - Building Your First Parser: tutorial/building-your-first-parser.md
-  - API Reference: javadoc/
+  - API Reference: https://bjoernloetters.github.io/Jar-Jar-Parse/javadoc/index.html

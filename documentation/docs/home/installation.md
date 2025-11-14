@@ -23,11 +23,11 @@ Add the following dependency to your `pom.xml`:
 <dependency>
     <groupId>io.github.bjoernloetters</groupId>
     <artifactId>jjparse-core</artifactId>
-    <version>1.2.3</version>
+    <version>1.2.4</version>
 </dependency>
 ```
 
-You can always find the latest version on Maven Central or on the project’s GitHub releases page.
+You can always find the latest version on Maven Central or on the project's GitHub releases page.
 
 ---
 
@@ -37,7 +37,7 @@ You can always find the latest version on Maven Central or on the project’s Gi
 
 ```kotlin
 dependencies {
-    implementation("io.github.bjoernloetters:jjparse-core:1.2.3")
+    implementation("io.github.bjoernloetters:jjparse-core:1.2.4")
 }
 ```
 
@@ -45,7 +45,7 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'io.github.bjoernloetters:jjparse-core:1.2.3'
+    implementation 'io.github.bjoernloetters:jjparse-core:1.2.4'
 }
 ```
 
@@ -58,13 +58,13 @@ Because JJParse is published to Maven Central, it can also be used with other JV
 ### SBT
 
 ```scala
-libraryDependencies += "io.github.bjoernloetters" % "jjparse-core" % "1.2.3"
+libraryDependencies += "io.github.bjoernloetters" % "jjparse-core" % "1.2.4"
 ```
 
 ### Ivy
 
 ```xml
-<dependency org="io.github.bjoernloetters" name="jjparse-core" rev="1.2.3"/>
+<dependency org="io.github.bjoernloetters" name="jjparse-core" rev="1.2.4"/>
 ```
 
 ---
@@ -74,9 +74,9 @@ libraryDependencies += "io.github.bjoernloetters" % "jjparse-core" % "1.2.3"
 If you prefer not to use a dependency manager, you can install JJParse manually:
 
 1. Download the latest `jar` from the GitHub releases page.
-2. Add the `jar` file to your project’s classpath. For example:
-    - **IntelliJ IDEA**: Right-click the `jar` → **Add as Library…**
-    - **Eclipse**: Right-click the project → **Build Path** → **Add External Archives…** and select the `jar`.
+2. Add the `jar` file to your project's classpath. For example:
+    - **IntelliJ IDEA**: Right-click the `jar` → **Add as Library ...**
+    - **Eclipse**: Right-click the project → **Build Path** → **Add External Archives ...** and select the `jar`.
 3. (Optional) Add the JavaDoc `jar` to your IDE to enable API documentation in code completion.
 
 ---
