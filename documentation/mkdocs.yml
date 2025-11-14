@@ -26,6 +26,7 @@ extra:
 
 repo_url: https://github.com/BjoernLoetters/Jar-Jar-Parse
 repo_name: BjoernLoetters/Jar-Jar-Parse
+edit_uri: edit/main/documentation/docs/
 
 nav:
   - Home:
