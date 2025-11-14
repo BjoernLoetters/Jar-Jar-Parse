@@ -41,7 +41,7 @@ If you are already using `maven`, just copy and paste the following dependency t
 <dependency>
     <groupId>io.github.bjoernloetters</groupId>
     <artifactId>jjparse-core</artifactId>
-    <version>1.2.4</version>
+    <version>1.2.5</version>
 </dependency>
 ```
 
@@ -50,7 +50,7 @@ Thanks to the widespread use of the Maven Central Repository, you can also inclu
    <summary>Gradle</summary>
 
    ```
-   implementation group: 'io.github.bjoernloetters', name: 'jjparse-core', version: '1.2.4'
+   implementation group: 'io.github.bjoernloetters', name: 'jjparse-core', version: '1.2.5'
    ```
    
 </details>
@@ -58,7 +58,7 @@ Thanks to the widespread use of the Maven Central Repository, you can also inclu
    <summary>SBT</summary>
 
    ```scala
-    libraryDependencies += "io.github.bjoernloetters" % "jjparse-core" % "1.2.4"
+    libraryDependencies += "io.github.bjoernloetters" % "jjparse-core" % "1.2.5"
    ```
 
 </details>
@@ -66,7 +66,7 @@ Thanks to the widespread use of the Maven Central Repository, you can also inclu
    <summary>Ivy</summary>
 
    ```xml
-   <dependency org="io.github.bjoernloetters" name="jjparse-core" rev="1.2.4"/>
+   <dependency org="io.github.bjoernloetters" name="jjparse-core" rev="1.2.5"/>
    ```
    
 </details>

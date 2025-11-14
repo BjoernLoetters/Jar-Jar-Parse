@@ -161,12 +161,48 @@ public final class CombinatorTest extends ParserTest {
     }
 
     @Test
+    public void chainlSuccessTest() {
+        final Parser<Integer> number = regex("[0-9]").map(Integer::parseInt);
+        final Parser<BiFunction<Integer, Integer, Integer>> sub = character('-').map(op -> (acc, next) -> acc - next);
+        final Parser<Integer> parser = number.chainl(sub, 42);
+
+        assertSuccess(parser, 0, "3-2-1");
+    }
+
+    @Test
+    public void chainlFailureTest() {
+        final Parser<Integer> number = regex("[0-9]").map(Integer::parseInt);
+        final Parser<BiFunction<Integer, Integer, Integer>> plus = character('+').map(op -> Integer::sum);
+        final Parser<Integer> parser = number.chainl(plus, 42);
+
+        assertSuccess(parser, 42, "abc");
+    }
+
+    @Test
     public void chainl1SuccessTest() {
         final Parser<Integer> number = regex("[0-9]").map(Integer::parseInt);
         final Parser<BiFunction<Integer, Integer, Integer>> plus = character('+').map(op -> Integer::sum);
         final Parser<Integer> parser = number.chainl1(plus);
 
         assertSuccess(parser, 6, "1+2+3");
+    }
+
+    @Test
+    public void chainrSuccessTest() {
+        final Parser<Integer> number = regex("[0-9]").map(Integer::parseInt);
+        final Parser<BiFunction<Integer, Integer, Integer>> sub = character('-').map(op -> (next, acc) -> acc - next);
+        final Parser<Integer> parser = number.chainr(sub, 42);
+
+        assertSuccess(parser, -4, "3-2-1");
+    }
+
+    @Test
+    public void chainrFailureTest() {
+        final Parser<Integer> number = regex("[0-9]").map(Integer::parseInt);
+        final Parser<BiFunction<Integer, Integer, Integer>> plus = character('+').map(op -> Integer::sum);
+        final Parser<Integer> parser = number.chainr(plus, 42);
+
+        assertSuccess(parser, 42, "abc");
     }
 
     @Test

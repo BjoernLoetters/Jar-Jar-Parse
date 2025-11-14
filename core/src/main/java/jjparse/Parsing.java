@@ -608,7 +608,7 @@ public abstract class Parsing<I> {
          * @see #chainr1
          * @see BiFunction
          */
-        public final Parser<T> chainl(final Parser<T> element, final Parser<BiFunction<T, T, T>> separator, final T otherwise) {
+        public final Parser<T> chainl(final Parser<BiFunction<T, T, T>> separator, final T otherwise) {
             return this.chainl1(separator).optional().map(result -> result.orElse(otherwise));
         }
 
