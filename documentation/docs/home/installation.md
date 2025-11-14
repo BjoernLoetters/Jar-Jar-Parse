@@ -23,7 +23,7 @@ Add the following dependency to your `pom.xml`:
 <dependency>
     <groupId>io.github.bjoernloetters</groupId>
     <artifactId>jjparse-core</artifactId>
-    <version>1.2.1</version>
+    <version>1.2.2</version>
 </dependency>
 ```
 
@@ -37,7 +37,7 @@ You can always find the latest version on Maven Central or on the project’s Gi
 
 ```kotlin
 dependencies {
-    implementation("io.github.bjoernloetters:jjparse-core:1.2.1")
+    implementation("io.github.bjoernloetters:jjparse-core:1.2.2")
 }
 ```
 
@@ -45,7 +45,7 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'io.github.bjoernloetters:jjparse-core:1.2.1'
+    implementation 'io.github.bjoernloetters:jjparse-core:1.2.2'
 }
 ```
 
@@ -58,13 +58,13 @@ Because JJParse is published to Maven Central, it can also be used with other JV
 ### SBT
 
 ```scala
-libraryDependencies += "io.github.bjoernloetters" % "jjparse-core" % "1.2.1"
+libraryDependencies += "io.github.bjoernloetters" % "jjparse-core" % "1.2.2"
 ```
 
 ### Ivy
 
 ```xml
-<dependency org="io.github.bjoernloetters" name="jjparse-core" rev="1.2.1"/>
+<dependency org="io.github.bjoernloetters" name="jjparse-core" rev="1.2.2"/>
 ```
 
 ---

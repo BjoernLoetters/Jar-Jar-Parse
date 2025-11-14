@@ -2,6 +2,8 @@ site_name: Jar Jar Parse - Parser Combinators for Java
 
 theme:
   name: material
+  icon:
+    repo: fontawesome/brands/github
   features:
     - navigation.tabs
     - navigation.sections
@@ -24,7 +26,6 @@ extra:
 
 repo_url: https://github.com/BjoernLoetters/Jar-Jar-Parse
 repo_name: BjoernLoetters/Jar-Jar-Parse
-repo_icon: fontawesome/brands/github
 
 nav:
   - Home:
