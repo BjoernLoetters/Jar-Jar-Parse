@@ -550,12 +550,24 @@ public abstract class Parsing<I> {
         /**
          * Creates a {@link Parser} which attempts to not parse this {@link Parser}. That is to say, every
          * {@link Failure} of this {@link Parser} is transformed into a {@link Success} and vice versa. The created
-         * {@link Parser} never consumes any {@link Input}.
+         * {@link Parser} never consumes any {@link Input} and behaves like a negative lookahead.
          * @return A {@link Parser} which ensures that this {@link Parser} is not applicable.
+         * @see #guard
          * @see #commit
          */
         public final Parser<Void> not() {
             return new NegationParser(this);
+        }
+
+        /**
+         * Creates a {@link Parser} which attempts to parse this {@link Parser}. The created
+         * {@link Parser} never consumes any {@link Input} and behaves like a positive lookahead.
+         * @return A {@link Parser} which ensures that this {@link Parser} is applicable.
+         * @see #not
+         * @see #commit
+         */
+        public final Parser<Void> guard() {
+            return new GuardParser(this);
         }
 
         /**
@@ -1046,6 +1058,30 @@ public abstract class Parsing<I> {
 
     }
 
+    private final class GuardParser extends Parser<Void> {
+
+        private final Parser<?> parser;
+
+        private GuardParser(final Parser<?> parser) {
+            this.parser = parser;
+        }
+
+        @Override
+        public Description description() {
+            return parser.description();
+        }
+
+        @Override
+        public Result<Void> apply(final Input<I> input) {
+            final Input<I> skipped = skip(input);
+            return switch(parser.apply(skipped)) {
+                case Success<?> ignore -> new Success<>(null, input);
+                case Failure<?> ignore -> new Error<>(Failure.format(skipped, description()), input);
+            };
+        }
+
+    }
+
     private final class NegationParser extends Parser<Void> {
 
         private final Parser<?> parser;
@@ -1063,8 +1099,8 @@ public abstract class Parsing<I> {
         public Result<Void> apply(final Input<I> input) {
             final Input<I> skipped = skip(input);
             return switch(parser.apply(skipped)) {
-                case Success<?> ignore -> new Error<>(Failure.format(skipped, description()), skipped);
-                case Failure<?> ignore -> new Success<>(null, skipped);
+                case Success<?> ignore -> new Error<>(Failure.format(skipped, description()), input);
+                case Failure<?> ignore -> new Success<>(null, input);
             };
         }
 

@@ -111,6 +111,18 @@ public final class CombinatorTest extends ParserTest {
     }
 
     @Test
+    public void guardSuccessTest() {
+        final Parser<String> parser = character('a').guard().andr(regex(".+"));
+        assertSuccess(parser, "acd", "acd");
+    }
+
+    @Test
+    public void guardFailureTest() {
+        final Parser<String> parser = character('a').guard().andr(regex(".+"));
+        assertFailure(parser, "syntax error in Test 'guardFailureTest' at line 1 and column 1: unexpected character 'b', expected the literal 'a'", "bcd");
+    }
+
+    @Test
     public void optionalSuccessTest() {
         final Parser<Optional<Character>> parser = character('a').optional();
         assertSuccess(parser, Optional.of('a'), "a");
