@@ -1,7 +1,7 @@
-![Unit Test](https://img.shields.io/github/actions/workflow/status/BjoernLoetters/Jar-Jar-Parse/test.yml?branch=main&label=Unit%20Test&logo=github&color=light-green)
+![Unit Test](https://img.shields.io/github/actions/workflow/status/BjoernLoetters/Jar-Jar-Parse/test.yml?branch=main&label=Unit%20Test&logo=github&cacheSeconds=3600&color=light-green)
 [![License](https://img.shields.io/github/license/BjoernLoetters/Jar-Jar-Parse?label=License&logo=github&color=light-green)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/BjoernLoetters/Java-Parser-Combinators?label=Release&logo=git&logoColor=white)](https://github.com/BjoernLoetters/Jar-Jar-Parse/releases)
-[![Maven](https://img.shields.io/maven-central/v/io.github.bjoernloetters/jjparse-core?label=Maven%20Central&logo=apache-maven&logoColor=white)](https://central.sonatype.com/artifact/io.github.bjoernloetters/jjparse-core)
+[![Release](https://img.shields.io/github/v/release/BjoernLoetters/Java-Parser-Combinators?label=Release&logo=git&logoColor=white&cacheSeconds=3600)](https://github.com/BjoernLoetters/Jar-Jar-Parse/releases)
+[![Maven](https://img.shields.io/maven-central/v/io.github.bjoernloetters/jjparse-core?label=Maven%20Central&logo=apache-maven&logoColor=white&cacheSeconds=3600)](https://central.sonatype.com/artifact/io.github.bjoernloetters/jjparse-core)
 [![Documentation](https://img.shields.io/badge/docs-online-blue?color=teal&label=Documentation)](https://bjoernloetters.github.io/Jar-Jar-Parse/)
 [![Javadoc](https://img.shields.io/badge/api-reference-green?color=teal&label=API)](https://bjoernloetters.github.io/Jar-Jar-Parse/javadoc/)
 
