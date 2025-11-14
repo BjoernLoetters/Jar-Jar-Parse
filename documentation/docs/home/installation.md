@@ -87,6 +87,7 @@ To verify that JJParse is on the classpath and working, create a small Java clas
 
 ```java
 import jjparse.StringParsing;
+import jjparse.input.Input;
 
 public class MyParser extends StringParsing {
     
