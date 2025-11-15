@@ -34,7 +34,7 @@ import jjparse.Parsing.Failure;
  *
  * @author Björn Lötters
  */
-public sealed abstract class Description permits Choice, Literal, Negation, RegExp, Sequence, Empty {
+public sealed abstract class Description permits CharacterClass, CharacterRange, Choice, Empty, Literal, Negation, RegExp, Sequence {
 
     /**
      * Construct a new {@link Description}.
@@ -96,6 +96,12 @@ public sealed abstract class Description permits Choice, Literal, Negation, RegE
 
             case Literal literal:
                 return negate ? new Negation(literal) : literal;
+
+            case CharacterRange characterRange:
+                return negate ? new Negation(characterRange) : characterRange;
+
+            case CharacterClass characterClass:
+                return negate ? new Negation(characterClass) : characterClass;
 
             case RegExp regExp:
                 return negate ? new Negation(regExp) : regExp;

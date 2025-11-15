@@ -1,8 +1,6 @@
 package jjparse;
 
-import jjparse.description.Description;
-import jjparse.description.Literal;
-import jjparse.description.RegExp;
+import jjparse.description.*;
 import jjparse.input.CharacterInput;
 import jjparse.input.Input;
 
@@ -64,32 +62,86 @@ public abstract class StringParsing extends Parsing<Character> {
      * @return A {@link Parser} which parses the provided {@link Character}.
      */
     public Parser<Character> character(final char character) {
-        return literal("" + character).map(c -> c.charAt(0));
+        return oneOf(character);
+    }
+
+    public Parser<Character> oneOf(final char ... characters) {
+        if (characters.length == 0) {
+            return new Parser<Character>() {
+                @Override
+                public Result<Character> apply(final Input<Character> input) {
+                    final Input<Character> skipped = skip(input);
+                    return new Error<Character>(Failure.format(skipped, description()), skipped);
+                }
+            };
+        } else {
+            return new CharacterClassParser(characters);
+        }
+    }
+
+    public Parser<Character> range(final char from, final char to) {
+        return new CharacterRangeParser((char) Math.min(from, to), (char) Math.max(from, to));
     }
 
     /** A {@link Parser} which parses a Latin lowercase letter (a - z). */
-    public final Parser<Character> lowercase = regex("[a-z]").map(c -> c.charAt(0));
+    public final Parser<Character> lowercase = range('a', 'z');
 
     /** A {@link Parser} which parses a Latin uppercase letter (A - Z). */
-    public final Parser<Character> uppercase = regex("[A-Z]").map(c -> c.charAt(0));
-
-    /** A {@link Parser} which parses the traditional C identifier. */
-    public final Parser<String> identifier = regex("[a-zA-Z_][a-zA-Z_0-9]*");
+    public final Parser<Character> uppercase = range('A', 'Z');
 
     /** A {@link Parser} which parses a single digit (0 - 9). */
-    public final Parser<Integer> digit = regex("[0-9]").map(Integer::parseInt);
+    public final Parser<Character> digit = range('0', '9');
 
-    /** A {@link Parser} which parses an unsigned 32-bit integer. */
-    public final Parser<Integer> number = regex("[0-9]+").map(Integer::parseInt);
+    /** A {@link Parser} which parses a sequence of at least one digit. */
+    public final Parser<String> digits1 = digit.repeat1().map(digits -> {
+        final char[] characters = new char[digits.size()];
+        int index = 0;
+        for (final char digit : digits) characters[index++] = digit;
+        return new String(characters);
+    });
 
-    /** A {@link Parser} which parses a signed 32-bit integer. */
-    public final Parser<Integer> int32 = regex("[+-]?[0-9]+").map(Integer::parseInt);
+    /** A {@link Parser} which parses a sequence of possibly zero digits. */
+    public final Parser<String> digits0 = digits1.optional().map(result -> result.orElse(""));
 
-    /** A {@link Parser} which parses a signed 64-bit integer. */
-    public final Parser<Long> int64 = regex("[+-]?[0-9]+").map(Long::parseLong);
+    /** A {@link Parser} which parses the traditional C identifier. */
+    public final Parser<String> identifier =
+        choice(lowercase, uppercase, character('_')).and(
+            choice(lowercase, uppercase, character('_'), digit).repeat()
+        ).map(result -> {
+            final char[] characters = new char[result.second().size() + 1];
+            characters[0] = result.first();
+            int index = 1;
+            for (final char character : result.second()) characters[index++] = character;
+            return new String(characters);
+        });
 
-    /** A {@link Parser} which parses a signed integer. */
-    public final Parser<BigInteger> integer = regex("[+-]?[0-9]+").map(BigInteger::new);
+    /** A {@link Parser} which parses a natural number as a 64-bit integer. */
+    public final Parser<Long> nat64 = digit.repeat1().map(digits -> {
+        long result = 0;
+        for (final char digit : digits) {
+            result *= 10;
+            result += (digit - '0');
+        }
+        return result;
+    });
+
+    /** A {@link Parser} which parses a natural number as a 32-bit integer. */
+    public final Parser<Integer> nat32 = nat64.map(Long::intValue);
+
+    /** A {@link Parser} which parses a 32-bit integer. */
+    public final Parser<Integer> int32 = oneOf('+', '-').optional().and(nat32)
+        .map(result -> result.first().orElse('+') == '+' ? result.second() : -result.second());
+
+    /** A {@link Parser} which parses a 64-bit integer. */
+    public final Parser<Long> int64 = oneOf('+', '-').optional().and(nat64)
+        .map(result -> result.first().orElse('+') == '+' ? result.second() : -result.second());
+
+    /** A {@link Parser} which parses a natural number. */
+    public final Parser<BigInteger> natural = digits1.map(BigInteger::new);
+
+    /** A {@link Parser} which parses an integer. */
+    public final Parser<BigInteger> integer = oneOf('+', '-').optional().and(natural)
+        .map(result -> result.first().orElse('+') == '+' ? result.second() : result.second().negate());
 
     /** A {@link Parser} which parses a 32-bit IEEE 754 floating point number. */
     public final Parser<Float> float32 = regex("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?").map(Float::parseFloat);
@@ -98,6 +150,100 @@ public abstract class StringParsing extends Parsing<Character> {
     public final Parser<Double> float64 = regex("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?").map(Double::parseDouble);
 
     /* *** Primitive Parser Implementations *** */
+
+    private final class CharacterRangeParser extends Parser<Character> {
+
+        private final char min;
+        private final char max;
+        private final Description description;
+
+        private CharacterRangeParser(final char min, final char max) {
+            this.min = min;
+            this.max = max;
+            this.description = new CharacterRange(min, max);
+        }
+
+        @Override
+        public Description description() {
+            return description;
+        }
+
+        @Override
+        public Result<Character> apply(final Input<Character> input) {
+            final Input<Character> skipped = skip(input);
+
+            if (skipped.nonEmpty()) {
+                final char character = input.head();
+                if (character < min || character > max) {
+                    return new Error<Character>(Failure.format(skipped, description()), skipped);
+                } else {
+                    return new Success<Character>(skipped.head(), skipped.tail());
+                }
+            } else {
+                return new Error<Character>(Failure.format(skipped, description()), skipped);
+            }
+        }
+
+    }
+
+    private final class CharacterClassParser extends Parser<Character> {
+
+        private final long[] allowed;
+        private final char min;
+        private final char max;
+        private final Description description;
+
+        private CharacterClassParser(final char[] characters) {
+            if (characters.length == 0) {
+                throw new IllegalArgumentException("character class may not be empty");
+            }
+
+            this.description = new CharacterClass(characters);
+
+            char min = Character.MAX_VALUE;
+            char max = Character.MIN_VALUE;
+
+            for (final char character : characters) {
+                if (character < min) min = character;
+                if (character > max) max = character;
+            }
+
+            this.min = min;
+            this.max = max;
+            this.allowed = new long[(max - min + 1 + 63) >>> 6];
+            for (final char character : characters) {
+                final int index = character - min;
+                final int longIndex = index >>> 6;
+                final int bitIndex = index & 63;
+                this.allowed[longIndex] = this.allowed[longIndex] | (1L << bitIndex);
+            }
+        }
+
+        @Override
+        public Description description() {
+            return description;
+        }
+
+        private boolean isAllowed(final char character) {
+            if (character < min || character > max) return false;
+            final int index = character - min;
+            final int longIndex = index >>> 6;
+            final int bitIndex = index & 63;
+            return (this.allowed[longIndex] & (1L << bitIndex)) != 0L;
+        }
+
+        @Override
+        public Result<Character> apply(final Input<Character> input) {
+            final Input<Character> skipped = skip(input);
+
+            if (skipped.nonEmpty() && isAllowed(skipped.head())) {
+                return new Success<Character>(skipped.head(), skipped.tail());
+            } else {
+                return new Error<Character>(Failure.format(skipped, description()), skipped);
+            }
+        }
+
+    }
 
     /**
      * A primitive {@link Parser} for parsing {@link String} literals.

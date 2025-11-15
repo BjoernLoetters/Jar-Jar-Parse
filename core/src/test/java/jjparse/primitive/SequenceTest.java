@@ -20,12 +20,12 @@ public class SequenceTest extends ParserTest {
 
     @Test
     public void sequencePartialFailureTest() {
-        assertFailure(parser, "syntax error in Test 'sequencePartialFailureTest' at line 1 and column 3: unexpected character 'x', expected the literal 'c'", "abx");
+        assertFailure(parser, "syntax error in Test 'sequencePartialFailureTest' at line 1 and column 3: unexpected character 'x', expected the character 'c'", "abx");
     }
 
     @Test
     public void sequenceEmptyInputTest() {
-        assertFailure(parser, "syntax error in Test 'sequenceEmptyInputTest' at line 1 and column 1: unexpected end of input, expected the literal 'a'", "");
+        assertFailure(parser, "syntax error in Test 'sequenceEmptyInputTest' at line 1 and column 1: unexpected end of input, expected the character 'a'", "");
     }
 
     @Test
