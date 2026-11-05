@@ -10,9 +10,9 @@ import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Spliterator;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * An abstract representation of an {@link Input} for parsing. In most cases, this will be a {@link CharacterInput}, which
@@ -23,7 +23,7 @@ import java.util.stream.StreamSupport;
  *
  * @see Parser
  * @see CharacterInput
- * @see StreamInput
+ * @see SpliteratorInput
  *
  * @author Björn Lötters
  */
@@ -164,7 +164,18 @@ public abstract class Input<T> {
      * @param <T> The element type of the {@link Input} and the {@link Iterable}.
      */
     public static <T> Input<T> of(final String name, final Iterable<T> iterable) {
-        return of(name, StreamSupport.stream(iterable.spliterator(), false));
+        return of(name, iterable.spliterator());
+    }
+
+    /**
+     * Constructs a new {@link Input} on basis of the provided {@link Spliterator}.
+     * @param name A human-readable name for the {@link Input}.
+     * @param spliterator The underlying {@link Spliterator} that provides the elements for the {@link Input}.
+     * @return An {@link Input} over the provided {@link Spliterator}.
+     * @param <T> The element type of the {@link Input} and the {@link Spliterator}.
+     */
+    public static <T> Input<T> of(final String name, final Spliterator<T> spliterator) {
+        return new SpliteratorInput<>(name, spliterator, 0);
     }
 
     /**
@@ -175,7 +186,7 @@ public abstract class Input<T> {
      * @param <T> The element type of the {@link Input} and the {@link Stream}.
      */
     public static <T> Input<T> of(final String name, final Stream<T> stream) {
-        return new StreamInput<>(name, stream, 0);
+        return new SpliteratorInput<>(name, stream.spliterator(), 0);
     }
 
     /**
