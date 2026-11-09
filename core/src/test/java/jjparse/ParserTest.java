@@ -4,6 +4,8 @@ import jjparse.input.Input;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
@@ -40,8 +42,7 @@ public abstract class ParserTest extends StringParsing {
         throw new RuntimeException("not a test");
     }
 
-    public final <T> void assertSuccess(final Parser<T> parser, final T expected, final String string) {
-        final Input<Character> input = Input.of("Test '" + getTestName() + "'", string).withFilter(whitespace);
+    public final <T> void assertSuccess(final Parser<T> parser, final T expected, final Input<Character> input) {
         switch (parser.apply(input)) {
             case Success<T> success:
                 assertEquals(expected, success.value);
@@ -53,8 +54,14 @@ public abstract class ParserTest extends StringParsing {
         }
     }
 
-    public final void assertFailure(final Parser<?> parser, final String message, final String string) {
-        final Input<Character> input = Input.of("Test '" + getTestName() + "'", string).withFilter(whitespace);
+    public final <T> void assertSuccess(final Parser<T> parser, final T expected, final String string) {
+        final Input<Character> input1 = Input.of("Test '" + getTestName() + "'", string).withFilter(whitespace);
+        final Input<Character> input2 = Input.of("Test '" + getTestName() + "'", string.chars().mapToObj(character -> (char) character)).withFilter(whitespace);
+        assertSuccess(parser, expected, input1);
+        assertSuccess(parser, expected, input2);
+    }
+
+    public final void assertFailure(final Parser<?> parser, final String message, final Input<Character> input) {
         switch (parser.apply(input)) {
             case Success<?> success:
                 fail("expected parse failure, but got success with value '" + success.value + "'");
@@ -64,6 +71,11 @@ public abstract class ParserTest extends StringParsing {
                 assertEquals(message, failure.message);
                 break;
         }
+    }
+
+    public final void assertFailure(final Parser<?> parser, final String message, final String string) {
+        final Input<Character> input = Input.of("Test '" + getTestName() + "'", string).withFilter(whitespace);
+        assertFailure(parser, message, input);
     }
 
 }
