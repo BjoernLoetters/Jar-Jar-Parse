@@ -3,8 +3,8 @@ package jjparse.input;
 import java.util.NoSuchElementException;
 
 /**
- * A specific implementation of an {@link Input} for {@link Character}s that also implements the {@link CharSequence}
- * interface. {@link Position}s returned by this {@link Input} are aware of unicode code points such that calling
+ * A specific implementation of an {@link Input} for {@link Character}s.
+ * {@link Position}s returned by this {@link Input} are aware of Unicode code points such that calling
  * {@link Position#toString()} shows the line and column numbers as they are perceived by the user. Instances of this
  * class can be obtained using one of the variants of {@link Input#of}.
  *
@@ -15,7 +15,7 @@ import java.util.NoSuchElementException;
  *
  * @author Björn Lötters
  */
-public final class CharacterInput extends Input<Character> implements CharSequence {
+public final class CharacterInput extends Input<Character> {
 
     /** A cache of line offsets to efficiently compute the line and column numbers of a {@link Position}. */
     private final int[] lines;
@@ -38,15 +38,15 @@ public final class CharacterInput extends Input<Character> implements CharSequen
      * @param sequence The underlying {@link CharSequence} for this {@link CharacterInput}.
      * @param offset An offset in characters that denotes the start of a subsequence in the provided {@link CharSequence}.
      * @param length The length of the subsequence that is denoted by the offset.
-     * @param lines A cache of line offsets, which is used to compute the line and column numbers in unicode code points
+     * @param lines A cache of line offsets, which is used to compute the line and column numbers in Unicode code points
      *              on basis of the character offset.
      */
     CharacterInput(final String name, final CharSequence sequence, final int offset, final int length, final int[] lines) {
         super(name);
         this.sequence = sequence;
+        this.lines = lines;
         this.offset = offset;
         this.length = length;
-        this.lines = lines;
         this.position = new CodePointPosition(offset);
     }
 
@@ -60,13 +60,17 @@ public final class CharacterInput extends Input<Character> implements CharSequen
         if (isEmpty()) {
             throw new NoSuchElementException();
         } else {
-            return charAt(0);
+            return sequence.charAt(offset);
         }
     }
 
     @Override
     public Input<Character> tail() {
-        return subSequence(1, length);
+        if (isEmpty()) {
+            return this;
+        } else {
+            return new CharacterInput(name, sequence, offset + 1, length - 1, lines);
+        }
     }
 
     @Override
@@ -75,37 +79,12 @@ public final class CharacterInput extends Input<Character> implements CharSequen
     }
 
     @Override
-    public int length() {
-        return length;
-    }
-
-    @Override
-    public char charAt(final int index) {
-        if (index < 0 || index >= length) {
-            throw new IndexOutOfBoundsException(index);
-        } else {
-            return sequence.charAt(offset + index);
-        }
-    }
-
-    @Override
-    public CharacterInput subSequence(final int start, final int end) {
-        if (start < 0 || start > end) {
-            throw new IndexOutOfBoundsException(start);
-        } else if (end > length) {
-            throw new IndexOutOfBoundsException(end);
-        } else {
-            return new CharacterInput(name, sequence, offset + start, end - start, lines);
-        }
-    }
-
-    @Override
     public String toString() {
         return sequence.subSequence(offset, offset + length).toString();
     }
 
     /**
-     * Represents a {@link Position} in this {@link CharacterInput} that is aware of the underlying unicode code points.
+     * Represents a {@link Position} in this {@link CharacterInput} that is aware of the underlying Unicode code points.
      *
      * @see Position
      * @see Character
@@ -134,7 +113,7 @@ public final class CharacterInput extends Input<Character> implements CharSequen
 
         /**
          * Returns the code point that occurs in the associated {@link CharacterInput} at this {@link CodePointPosition}.
-         * @return The unicode code point at this {@link CodePointPosition}.
+         * @return The Unicode code point at this {@link CodePointPosition}.
          */
         public int getCodePoint() {
             if (codePoint == -1) {
@@ -154,7 +133,7 @@ public final class CharacterInput extends Input<Character> implements CharSequen
         /**
          * Computes the line number that corresponds to this {@link CodePointPosition} as it is perceived by the user.
          * That is to say, this is not necessarily the character offset in this {@link CodePointPosition} but the
-         * unicode code point offset.
+         * Unicode code point offset.
          * @return The line number of this {@link CodePointPosition}.
          */
         public int getLineNumber() {
@@ -191,7 +170,7 @@ public final class CharacterInput extends Input<Character> implements CharSequen
         /**
          * Computes the column number that corresponds to this {@link CodePointPosition} as it is perceived by the user.
          * That is to say, this is not necessarily the character offset in this {@link CodePointPosition} but the
-         * unicode code point offset relative to the corresponding line offset.
+         * Unicode code point offset relative to the corresponding line offset.
          * @return The column number of this {@link CodePointPosition}.
          */
         public int getColumnNumber() {
@@ -208,9 +187,9 @@ public final class CharacterInput extends Input<Character> implements CharSequen
                 }
 
                 if (offset > this.offset) {
-                    // This position is not correctly aligned with the unicode code points in the underlying source.
+                    // This position is not correctly aligned with the Unicode code points in the underlying source.
                     // That is to say, the offset of this position points to a low surrogate (which should not happen
-                    // normally) and the computed column number already points to the next unicode code point. For this
+                    // normally) and the computed column number already points to the next Unicode code point. For this
                     // reason, we decrement the column number again, to point to the code point to which the low
                     // surrogate belongs.
                     columnNumber -= 1;

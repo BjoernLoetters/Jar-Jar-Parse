@@ -1,5 +1,6 @@
 package jjparse.input;
 
+import jjparse.Parsing;
 import jjparse.Parsing.Parser;
 
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Spliterator;
+import java.util.logging.Filter;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -19,7 +21,7 @@ import java.util.stream.Stream;
  * is an {@link Input} of {@link Character}s and can be considered a sequence of characters (just like a {@link String}).
  * <br/><br/>
  * <b>Note</b>: This class is intended to be immutable and hence covariant in its type parameter.
- * @param <T> The covariant element type for this {@link Input}. In most cases this type equals {@link Character}.
+ * @param <I> The covariant element type for this {@link Input}. In most cases this type equals {@link Character}.
  *
  * @see Parser
  * @see CharacterInput
@@ -27,17 +29,54 @@ import java.util.stream.Stream;
  *
  * @author Björn Lötters
  */
-public abstract class Input<T> {
+public abstract class Input<I> {
 
     /** A human-readable name for this {@link Input} which can be used for error reporting purposes. */
     public final String name;
 
     /**
-     * Constructs a new {@link Input} on basis of the provided name.
+     * Constructs a new {@link Input} on basis of the provided name and filter parser.
      * @param name A human-readable name for this {@link Input}, which is primarily used for error reporting purposes.
      */
-    public Input(final String name) {
+    protected Input(final String name) {
         this.name = name;
+    }
+
+    /**
+     * Equips this {@link Input} with a new {@link Parser} for skipping irrelevant input tokens.
+     * @param filter A {@link Parser} that skips irrelevant input tokens.
+     * @return This {@link Input} equipped with the provided {@link Parser} for skipping.
+     * @see #raw()
+     * @see #withFilter(Input)
+     */
+    public final Input<I> withFilter(final Parsing<I>.Parser<Void> filter) {
+        return new FilteredInput<>(this, filter);
+    }
+
+    /**
+     * Equips this {@link Input} with the filter {@link Parser} of the provided {@link Input}.
+     * @param input The {@link Input} from which this {@link Input} should inherit the filter {@link Parser}.
+     * @return This {@link Input} equipped with the same filter {@link Parser} as the provided {@link Input}.
+     * @see #withFilter(Parsing.Parser)
+     */
+    public final Input<I> withFilter(Input<I> input) {
+        Input<I> result = this;
+        while (input instanceof FilteredInput<I> filter) {
+            result = result.withFilter(filter.filter);
+            input = filter.input;
+        }
+        return result;
+    }
+
+    /**
+     * Filters out any leading irrelevant tokens of this {@link Input} and returns the resulting unfiltered {@link Input}
+     * for raw usage. This is useful for primitive parsers, where no further input filtering should happen.
+     * @return The unfiltered {@link Input} underlying this one after skipping any leading irrelevant tokens.
+     * @see #withFilter(Parsing.Parser)
+     * @see #withFilter(Input)
+     */
+    public Input<I> raw() {
+        return this;
     }
 
     /**
@@ -63,7 +102,7 @@ public abstract class Input<T> {
      * @see #isEmpty()
      * @see #tail()
      */
-    public abstract T head() throws NoSuchElementException;
+    public abstract I head() throws NoSuchElementException;
 
     /**
      * Returns the rest of this {@link Input}, excluding its first element. If this {@link Input} is empty, an
@@ -72,7 +111,7 @@ public abstract class Input<T> {
      * @see #isEmpty()
      * @see #head()
      */
-    public abstract Input<T> tail();
+    public abstract Input<I> tail();
 
     /**
      * A {@link Position} that points to the first element in this {@link Input}.
@@ -94,7 +133,7 @@ public abstract class Input<T> {
     public abstract class Position {
 
         /** The {@link Input} to which this {@link Position} refers. */
-        public final Input<T> input;
+        public final Input<I> input;
 
         /** The offset (i.e., the number of skipped elements) to which this {@link Position} points in this {@link Input}. */
         public final int offset;
@@ -186,7 +225,7 @@ public abstract class Input<T> {
      * @param <T> The element type of the {@link Input} and the {@link Stream}.
      */
     public static <T> Input<T> of(final String name, final Stream<T> stream) {
-        return new SpliteratorInput<>(name, stream.spliterator(), 0);
+        return of(name, stream.spliterator());
     }
 
     /**

@@ -18,17 +18,6 @@ import java.util.regex.Pattern;
  */
 public abstract class StringParsing extends Parsing<Character> {
 
-    /**
-     * Creates an instance of this {@link StringParsing} class and provides access to all {@link Parser}s and
-     * {@link Parser} combinators in that way. Additionally, the skip {@link Parser} is initialized in order to skip
-     * any white space as defined by the regular expression \s.
-     *
-     * @see #setSkipParser
-     */
-    public StringParsing() {
-        setSkipParser(regex("\\s+"));
-    }
-
     /* *** Public Parser API *** */
 
     /**
@@ -38,7 +27,7 @@ public abstract class StringParsing extends Parsing<Character> {
      * @see #regex
      */
     public Parser<String> literal(final String literal) {
-        return new LiteralParser(literal);
+        return primitive(new LiteralParser(literal));
     }
 
     /**
@@ -53,7 +42,7 @@ public abstract class StringParsing extends Parsing<Character> {
      * @see #literal
      */
     public Parser<String> regex(final String pattern) {
-        return new RegExpParser(pattern);
+        return primitive(new RegExpParser(pattern));
     }
 
     /**
@@ -70,18 +59,28 @@ public abstract class StringParsing extends Parsing<Character> {
             return new Parser<Character>() {
                 @Override
                 public Result<Character> apply(final Input<Character> input) {
-                    final Input<Character> skipped = skip(input);
-                    return new Error<Character>(Failure.format(skipped, description()), skipped);
+                    return new Error<Character>(Failure.format(input, description()), input);
                 }
             };
         } else {
-            return new CharacterClassParser(characters);
+            return primitive(new CharacterClassParser(characters));
         }
     }
 
     public Parser<Character> range(final char from, final char to) {
-        return new CharacterRangeParser((char) Math.min(from, to), (char) Math.max(from, to));
+        return primitive(new CharacterRangeParser((char) Math.min(from, to), (char) Math.max(from, to)));
     }
+
+    /**
+     * A {@link Parser} which parses any of the following whitespace characters:
+     * <ul>
+     *     <li>Space ({@code \u005Cu0020})</li>
+     *     <li>Tab ({@code \u005Cu0009})</li>
+     *     <li>Carriage Return ({@code \u005Cu000D})</li>
+     *     <li>Line Feed ({@code \u005Cu000A})</li>
+     * </ul>
+     */
+    public final Parser<Void> whitespace = primitive(oneOf(' ', '\t', '\r', '\n').repeat()).ignore();
 
     /** A {@link Parser} which parses a Latin lowercase letter (a - z). */
     public final Parser<Character> lowercase = range('a', 'z');
@@ -93,21 +92,21 @@ public abstract class StringParsing extends Parsing<Character> {
     public final Parser<Character> digit = range('0', '9');
 
     /** A {@link Parser} which parses a sequence of at least one digit. */
-    public final Parser<String> digits1 = digit.repeat1().map(digits -> {
+    public final Parser<String> digits1 = primitive(digit.repeat1().map(digits -> {
         final char[] characters = new char[digits.size()];
         int index = 0;
         for (final char digit : digits) characters[index++] = digit;
         return new String(characters);
-    });
+    }));
 
     /** A {@link Parser} which parses a sequence of possibly zero digits. */
     public final Parser<String> digits0 = digits1.optional().map(result -> result.orElse(""));
 
     /** A {@link Parser} which parses the traditional C identifier. */
     public final Parser<String> identifier =
-        choice(lowercase, uppercase, character('_')).and(
+        primitive(choice(lowercase, uppercase, character('_')).and(
             choice(lowercase, uppercase, character('_'), digit).repeat()
-        ).map(result -> {
+        )).map(result -> {
             final char[] characters = new char[result.second().size() + 1];
             characters[0] = result.first();
             int index = 1;
@@ -116,7 +115,7 @@ public abstract class StringParsing extends Parsing<Character> {
         });
 
     /** A {@link Parser} which parses a natural number as a 64-bit integer. */
-    public final Parser<Long> nat64 = digit.repeat1().map(digits -> {
+    public final Parser<Long> nat64 = primitive(digit.repeat1()).map(digits -> {
         long result = 0;
         for (final char digit : digits) {
             result *= 10;
@@ -129,18 +128,18 @@ public abstract class StringParsing extends Parsing<Character> {
     public final Parser<Integer> nat32 = nat64.map(Long::intValue);
 
     /** A {@link Parser} which parses a 32-bit integer. */
-    public final Parser<Integer> int32 = oneOf('+', '-').optional().and(nat32)
+    public final Parser<Integer> int32 = primitive(oneOf('+', '-').optional().and(nat32))
         .map(result -> result.first().orElse('+') == '+' ? result.second() : -result.second());
 
     /** A {@link Parser} which parses a 64-bit integer. */
-    public final Parser<Long> int64 = oneOf('+', '-').optional().and(nat64)
+    public final Parser<Long> int64 = primitive(oneOf('+', '-').optional().and(nat64))
         .map(result -> result.first().orElse('+') == '+' ? result.second() : -result.second());
 
     /** A {@link Parser} which parses a natural number. */
     public final Parser<BigInteger> natural = digits1.map(BigInteger::new);
 
     /** A {@link Parser} which parses an integer. */
-    public final Parser<BigInteger> integer = oneOf('+', '-').optional().and(natural)
+    public final Parser<BigInteger> integer = primitive(oneOf('+', '-').optional().and(natural))
         .map(result -> result.first().orElse('+') == '+' ? result.second() : result.second().negate());
 
     /** A {@link Parser} which parses a 32-bit IEEE 754 floating point number. */
@@ -170,17 +169,15 @@ public abstract class StringParsing extends Parsing<Character> {
 
         @Override
         public Result<Character> apply(final Input<Character> input) {
-            final Input<Character> skipped = skip(input);
-
-            if (skipped.nonEmpty()) {
+            if (input.nonEmpty()) {
                 final char character = input.head();
                 if (character < min || character > max) {
-                    return new Error<Character>(Failure.format(skipped, description()), skipped);
+                    return new Error<Character>(Failure.format(input, description()), input);
                 } else {
-                    return new Success<Character>(skipped.head(), skipped.tail());
+                    return new Success<Character>(input.head(), input.tail());
                 }
             } else {
-                return new Error<Character>(Failure.format(skipped, description()), skipped);
+                return new Error<Character>(Failure.format(input, description()), input);
             }
         }
 
@@ -234,12 +231,10 @@ public abstract class StringParsing extends Parsing<Character> {
 
         @Override
         public Result<Character> apply(final Input<Character> input) {
-            final Input<Character> skipped = skip(input);
-
-            if (skipped.nonEmpty() && isAllowed(skipped.head())) {
-                return new Success<Character>(skipped.head(), skipped.tail());
+            if (input.nonEmpty() && isAllowed(input.head())) {
+                return new Success<Character>(input.head(), input.tail());
             } else {
-                return new Error<Character>(Failure.format(skipped, description()), skipped);
+                return new Error<Character>(Failure.format(input, description()), input);
             }
         }
 
@@ -273,9 +268,7 @@ public abstract class StringParsing extends Parsing<Character> {
 
         @Override
         public Result<String> apply(final Input<Character> input) {
-            final Input<Character> skipped = skip(input);
-
-            Input<Character> current = skipped;
+            Input<Character> current = input;
             int index = 0;
             while (current.nonEmpty() && index < literal.length()) {
                 final int a;
@@ -296,7 +289,7 @@ public abstract class StringParsing extends Parsing<Character> {
                 }
 
                 if (a != b) {
-                    return new Error<String>(Failure.format(previous, description()), skipped);
+                    return new Error<String>(Failure.format(previous, description()), input);
                 }
 
                 index += Character.charCount(a);
@@ -305,7 +298,7 @@ public abstract class StringParsing extends Parsing<Character> {
 
             if (index < literal.length()) {
                 // We hit the end of the input
-                return new Error<String>(Failure.format(current, description()), skipped);
+                return new Error<String>(Failure.format(current, description()), input);
             }
 
             return new Success<String>(literal, current);
@@ -343,32 +336,18 @@ public abstract class StringParsing extends Parsing<Character> {
 
         @Override
         public Result<String> apply(final Input<Character> input) {
-            final Input<Character> skipped = skip(input);
-
-            if (skipped instanceof CharacterInput sequence) {
-                final Matcher matcher = pattern.matcher(sequence);
-                if (matcher.lookingAt()) {
-                    final String value = matcher.group();
-                    return new Success<String>(value, sequence.subSequence(value.length(), sequence.length()));
-                } else {
-                    return new Error<String>(Failure.format(skipped, description()), skipped);
+            final CharacterSequenceWrapper sequence = new CharacterSequenceWrapper(input);
+            final Matcher matcher = pattern.matcher(sequence);
+            if (matcher.lookingAt()) {
+                final String value = matcher.group();
+                Input<Character> rest = input;
+                for (int i = 0; i < value.length(); ++i) {
+                    rest = rest.tail();
                 }
+                return new Success<String>(value, rest);
             } else {
-                final CharacterSequenceWrapper sequence = new CharacterSequenceWrapper(skipped);
-                final Matcher matcher = pattern.matcher(sequence);
-                if (matcher.lookingAt()) {
-                    final String value = matcher.group();
-                    Input<Character> rest = skipped;
-                    for (int i = 0; i < value.length(); ++i) {
-                        rest = rest.tail();
-                    }
-                    return new Success<String>(value, rest);
-                } else {
-                    return new Error<String>(Failure.format(skipped, description()), skipped);
-                }
+                return new Error<String>(Failure.format(input, description()), input);
             }
-
-
         }
 
     }
@@ -409,7 +388,7 @@ public abstract class StringParsing extends Parsing<Character> {
         public char charAt(int index) {
             while (index >= bufferSize && current.nonEmpty()) {
                 if (bufferSize >= buffer.length) {
-                    final char[] temporary = new char[buffer.length * 2];
+                    final char[] temporary = new char[buffer.length * 2 + 1];
                     System.arraycopy(buffer, 0, temporary, 0, buffer.length);
                     buffer = temporary;
                 }
@@ -419,7 +398,7 @@ public abstract class StringParsing extends Parsing<Character> {
             }
 
             if (index >= bufferSize) {
-                throw new IndexOutOfBoundsException(index);
+                return '\0';
             } else {
                 return buffer[index];
             }

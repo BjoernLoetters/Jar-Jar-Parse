@@ -571,6 +571,14 @@ public abstract class Parsing<I> {
         }
 
         /**
+         * Creates a {@link Parser} which behaves just like this {@link Parser} but ignores its result.
+         * @return A {@link Parser} that recognizes the exact same language as this one.
+         */
+        public final Parser<Void> ignore() {
+            return map(ignore -> null);
+        }
+
+        /**
          * Creates a {@link Parser} which prints additional debug output to the standard output stream.
          * @param name A human-readable name for this {@link Parser}.
          * @return A {@link Parser} which behaves like this {@link Parser} but prints additional debug output.
@@ -682,12 +690,6 @@ public abstract class Parsing<I> {
 
     }
 
-    /** The {@link Parser} used for skipping {@link Input} before applying another {@link Parser}. */
-    private Parser<Void> skip = success(() -> null);
-
-    /** A boolean flag that controls whether we are currently in skip mode and hence should not apply the skip {@link Parser} again. */
-    private boolean skipping = false;
-
     /* *** Public Parser API *** */
 
     /**
@@ -697,63 +699,22 @@ public abstract class Parsing<I> {
      * @param input The {@link Input} that should be parsed using the provided {@link Parser}.
      * @return The {@link Result} after applying the provided {@link Parser} to the {@link Input}.
      * @param <T> The type of the {@link Result}.
-     * @see #skip(Input)
      * @see Parser
      * @see Input
      * @see Result
      */
     public final <T> Result<T> parse(final Parser<? extends T> parser, final Input<? extends I> input) {
         @SuppressWarnings("unchecked") // The type is assumed to be immutable and hence covariant
-        final Result<T> result = (Result<T>) parser.apply(skip(input));
+        final Result<T> result = (Result<T>) parser.apply((Input<I>) input);
 
         if (result.isSuccess()) {
-            final Input<I> rest = skip(result.rest);
-            if (rest.isEmpty()) {
-                return new Success<>(result.getOrFail(), rest);
+            if (result.rest.isEmpty()) {
+                return new Success<>(result.getOrFail(), result.rest);
             } else {
-                return new Error<>(Failure.format(rest, new Empty()), rest);
+                return new Error<>(Failure.format(result.rest, new Empty()), result.rest);
             }
         } else {
             return result;
-        }
-    }
-
-    /**
-     * Skips the prefix of the provided {@link Input} using the current skip {@link Parser}. This method does not fail,
-     * even if the skip {@link Parser} was not successful.
-     * @param input The {@link Input} whose prefix should be skipped.
-     * @return The {@link Input} that remains after skipping.
-     * @see #setSkipParser(Parser)
-     */
-    public final Input<I> skip(final Input<? extends I> input) {
-        @SuppressWarnings("unchecked") // The type is assumed to be immutable and hence covariant
-        final Input<I> up = (Input<I>) input;
-        if (skipping) {
-            return up;
-        } else {
-            skipping = true;
-            try {
-                return skip.apply(up).rest;
-            } finally {
-                skipping = false;
-            }
-        }
-    }
-
-    /**
-     * Sets the {@link Parser} that is used for skipping {@link Input} before another {@link Parser} is applied. By
-     * default, no skip {@link Parser} is set and no {@link Input} is skipped.
-     * @param parser The new {@link Parser} that should be used for skipping. This {@link Parser} may fail, in which
-     *               case no {@link Input} is skipped.
-     * @param <T> The result type of the provided {@link Parser}, which is voided internally.
-     * @throws NullPointerException If the provided {@link Parser} is {@code null}.
-     * @see #skip(Input)
-     */
-    public final <T> void setSkipParser(final Parser<? extends T> parser) throws NullPointerException {
-        if (parser == null) {
-            throw new NullPointerException();
-        } else {
-            skip = parser.map(ignore -> null);
         }
     }
 
@@ -773,7 +734,7 @@ public abstract class Parsing<I> {
 
             @Override
             public Result<T> apply(final Input<I> input) {
-                return function.apply(skip(input));
+                return function.apply(input);
             }
 
         };
@@ -810,6 +771,34 @@ public abstract class Parsing<I> {
     }
 
     /**
+     * Constructs a primitive {@link Parser} that behaves just like the provided one, except that no {@link Input} is
+     * filtered while parsing. This is especially useful for scanner-less parsing, when terminal symbols should be
+     * matched literally.
+     * @param parser The {@link Parser} that should be used for parsing.
+     * @return A {@link Parser} that behaves just like the provided one, except that no {@link Input} is filtered.
+     * @param <T> The type of the {@link Result}.
+     */
+    public final <T> Parser<T> primitive(final Parser<? extends T> parser) {
+        return new Parser<T>() {
+
+            @Override
+            public Result<T> apply(final Input<I> input) {
+                return switch (parser.apply(input.raw())) {
+                    case Success<? extends T> success -> new Success<>(success.value, success.rest.withFilter(input));
+                    case Error<? extends T> error -> new Error<>(error.message, error.rest.withFilter(input));
+                    case Abort<? extends T> abort -> new Abort<>(abort.message, abort.rest.withFilter(input));
+                };
+            }
+
+            @Override
+            public Description description() {
+                return parser.description();
+            }
+
+        };
+    }
+
+    /**
      * Constructs a {@link Parser} that attempts to parse the provided {@link Parser}s in the order they are given until
      * one of them succeeds or aborts. The returned {@link Parser} fails if all {@link Parser}s fail.
      * @param parsers The {@link Parser}s that should be used for the new {@link Parser}.
@@ -839,7 +828,7 @@ public abstract class Parsing<I> {
      */
     @SafeVarargs
     public final <T> Parser<List<T>> sequence(final Parser<? extends T>... parsers) {
-        Parser<List<T>> sequence = success(() -> new ArrayList<>());
+        Parser<List<T>> sequence = success(ArrayList::new);
 
         for (final Parser<? extends T> parser : parsers) {
             sequence = sequence.flatMap(result -> parser.map(element -> {
@@ -897,7 +886,7 @@ public abstract class Parsing<I> {
 
         @Override
         public Result<U> apply(final Input<I> input) {
-            return parser.apply(skip(input)).map(function);
+            return parser.apply(input).map(function);
         }
 
     }
@@ -920,9 +909,9 @@ public abstract class Parsing<I> {
 
         @Override
         public Result<U> apply(final Input<I> input) {
-            return switch (parser.apply(skip(input)).map(function)) {
+            return switch (parser.apply(input).map(function)) {
                 case Success<Parser<U>> success ->
-                    switch (success.value.apply(skip(success.rest))) {
+                    switch (success.value.apply(success.rest)) {
                         case Success<U> result -> result;
                         case Error<U> error -> new Error<>(error.message, input);
                         case Abort<U> abort -> new Abort<>(abort.message, input);
@@ -956,14 +945,13 @@ public abstract class Parsing<I> {
 
         @Override
         public Result<T> apply(final Input<I> input) {
-            final Input<I> skipped = skip(input);
-            return switch (first.apply(skipped)) {
+            return switch (first.apply(input)) {
                 case Success<T> success -> success;
                 case Abort<T> abort -> abort;
-                case Error<T> ignore -> switch (second.apply(skipped)) {
+                case Error<T> ignore -> switch (second.apply(input)) {
                     case Success<T> success -> success;
                     case Abort<T> abort -> abort;
-                    case Error<T> secondError -> new Error<>(Failure.format(secondError.rest, description()), skipped);
+                    case Error<T> secondError -> new Error<>(Failure.format(secondError.rest, description()), input);
                 };
             };
         }
@@ -997,7 +985,7 @@ public abstract class Parsing<I> {
 
         @Override
         public Result<T> apply(final Input<I> input) {
-            return get().apply(skip(input));
+            return get().apply(input);
         }
 
     }
@@ -1018,11 +1006,11 @@ public abstract class Parsing<I> {
         @Override
         public Result<List<T>> apply(final Input<I> input) {
             final List<T> elements = new ArrayList<>();
-            Result<T> result = parser.apply(skip(input));
+            Result<T> result = parser.apply(input);
 
             while (result.isSuccess()) {
                 elements.add(result.getOrFail());
-                result = parser.apply(skip(result.rest));
+                result = parser.apply(result.rest);
             }
 
             return switch (result) {
@@ -1073,10 +1061,9 @@ public abstract class Parsing<I> {
 
         @Override
         public Result<Void> apply(final Input<I> input) {
-            final Input<I> skipped = skip(input);
-            return switch(parser.apply(skipped)) {
+            return switch(parser.apply(input)) {
                 case Success<?> ignore -> new Success<>(null, input);
-                case Failure<?> ignore -> new Error<>(Failure.format(skipped, description()), input);
+                case Failure<?> ignore -> new Error<>(Failure.format(input, description()), input);
             };
         }
 
@@ -1097,9 +1084,8 @@ public abstract class Parsing<I> {
 
         @Override
         public Result<Void> apply(final Input<I> input) {
-            final Input<I> skipped = skip(input);
-            return switch(parser.apply(skipped)) {
-                case Success<?> ignore -> new Error<>(Failure.format(skipped, description()), input);
+            return switch(parser.apply(input)) {
+                case Success<?> ignore -> new Error<>(Failure.format(input, description()), input);
                 case Failure<?> ignore -> new Success<>(null, input);
             };
         }
@@ -1119,9 +1105,8 @@ public abstract class Parsing<I> {
 
         @Override
         public Result<T> apply(final Input<I> input) {
-            final Input<I> skipped = skip(input);
-            System.out.printf("trying '%s' in %s (%s)\n", name, skipped.position(), skipped.position().describe());
-            final Result<T> result = parser.apply(skipped);
+            System.out.printf("trying '%s' in %s (%s)\n", name, input.position(), input.position().describe());
+            final Result<T> result = parser.apply(input);
             return switch (result) {
                 case Success<T> success -> {
                     System.out.printf("succeeded to parse '%s': %s\n", name, success.value);

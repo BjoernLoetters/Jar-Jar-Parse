@@ -6,7 +6,7 @@ import java.util.Spliterator;
 /**
  * A lazily evaluated {@link Input} for {@link Spliterator}s of arbitrary elements. {@link Position}s returned by this
  * {@link Input} reflect the order in which the elements are retrieved from the {@link Spliterator} using {@link Spliterator#tryAdvance}.
- * @param <T> The element type of the {@link Spliterator}.
+ * @param <I> The element type of the {@link Spliterator}.
  *
  * @author Björn Lötters
  *
@@ -15,16 +15,19 @@ import java.util.Spliterator;
  * @see Spliterator
  * @see Spliterator#tryAdvance
  */
-public final class SpliteratorInput<T> extends Input<T> {
+public final class SpliteratorInput<I> extends Input<I> {
 
     /** The {@link Spliterator} internally used as the source. */
-    private final Spliterator<T> spliterator;
+    private final Spliterator<I> spliterator;
 
     /** The current offset in the {@link Spliterator} (i.e., the number of elements already retrieved). */
     private final int offset;
 
     /** A cache of the current element in this {@link SpliteratorInput}. */
-    private T head = null;
+    private I head = null;
+
+    /** A cache of the remaining {@link Input} of this {@link SpliteratorInput}. */
+    private SpliteratorInput<I> tail = null;
 
     /** A cache for the information whether this {@link SpliteratorInput} is empty or not. */
     private boolean isEmpty = false;
@@ -38,7 +41,7 @@ public final class SpliteratorInput<T> extends Input<T> {
      * @param spliterator The underlying {@link Spliterator} for this {@link SpliteratorInput}.
      * @param offset The current offset in the underlying {@link Spliterator} (i.e., the number of elements already retrieved).
      */
-    SpliteratorInput(final String name, final Spliterator<T> spliterator, final int offset) {
+    SpliteratorInput(final String name, final Spliterator<I> spliterator, final int offset) {
         super(name);
         this.spliterator = spliterator;
         this.offset = offset;
@@ -50,7 +53,11 @@ public final class SpliteratorInput<T> extends Input<T> {
     private void initialize() {
         if (!initialized) {
             initialized = true;
-            this.isEmpty = !spliterator.tryAdvance(head -> this.head = head);
+
+            this.isEmpty = !spliterator.tryAdvance(head -> {
+                this.head = head;
+                this.tail = new SpliteratorInput<>(name, spliterator, offset + 1);
+            });
         }
     }
 
@@ -61,7 +68,7 @@ public final class SpliteratorInput<T> extends Input<T> {
     }
 
     @Override
-    public T head() throws NoSuchElementException {
+    public I head() throws NoSuchElementException {
         initialize();
         if (isEmpty) {
             throw new NoSuchElementException();
@@ -71,12 +78,12 @@ public final class SpliteratorInput<T> extends Input<T> {
     }
 
     @Override
-    public SpliteratorInput<T> tail() {
+    public SpliteratorInput<I> tail() {
         initialize();
         if (isEmpty) {
             return this;
         } else {
-            return new SpliteratorInput<>(name, spliterator, offset + 1);
+            return this.tail;
         }
     }
 

@@ -71,6 +71,7 @@ public sealed abstract class Description permits CharacterClass, CharacterRange,
         switch (description) {
             case Choice choice: {
                 final List<Description> descriptions = collect(choice, new ArrayList<>()).stream().map(element -> normalize(element, negate)).toList();
+                System.out.println(descriptions);
                 if (negate) {
                     return normalize(new Sequence(descriptions), false);
                 } else if (descriptions.stream().allMatch(element -> element instanceof RegExp)) {
@@ -129,6 +130,7 @@ public sealed abstract class Description permits CharacterClass, CharacterRange,
             }
         }
 
+        System.out.println("alternatives: " + alternatives);
         return alternatives;
     }
 

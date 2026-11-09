@@ -271,7 +271,7 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void positionParserCorrectPositionTest() {
         final String contents = "line1 column1\n line2\n    column3  line3\n";
-        final Input<Character> input = Input.of("Test '" + getTestName() + "'", contents);
+        final Input<Character> input = Input.of("Test '" + getTestName() + "'", contents).withFilter(whitespace);
 
         final Parser<Function<Input<Character>.Position, String>> parser = regex("line[0-9]|column[0-9]").map(ignore -> position -> position.toString());
 
@@ -301,7 +301,7 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void positionParserCorrectCodePointPositionTest() {
         final String contents = "😀🙂\n  🙂😀";
-        final Input<Character> input = Input.of("Test '" + getTestName() + "'", contents);
+        final Input<Character> input = Input.of("Test '" + getTestName() + "'", contents).withFilter(whitespace);
 
         final Parser<Function<Input<Character>.Position, String>> parser = regex("😀|🙂").map(ignore -> position -> position.toString());
 
