@@ -1,9 +1,7 @@
 package jjparse;
 
 import jjparse.data.Product;
-import jjparse.description.Choice;
-import jjparse.description.Description;
-import jjparse.description.Empty;
+import jjparse.diagnostic.Expectation;
 import jjparse.input.Input;
 
 import java.util.*;
@@ -15,17 +13,18 @@ import java.util.stream.Stream;
 /**
  * An abstract class that provides all basic parsing capabilities.
  * <br/><br/>
- * In order to implement a parser, one must extend this class and specify the corresponding input type. The subclass
- * then has access to the {@link Parsing.Parser} class and the {@link Parsing.Result} class, which are specialized for
- * the respective input type.
+ * In order to implement a {@link Parser}, one must extend this class and specify the corresponding {@link Input} type.
+ * The subclass then has access to the {@link Parser} class and the {@link Result} class, which are specialized for
+ * the respective {@link Input} type.
  *
- * @see Parsing.Result
- * @see Parsing.Parser
- * @see StringParsing
+ * @see Result
+ * @see Parser
+ * @see TextParsing
+ * @see Input
  *
  * @author Björn Lötters
  *
- * @param <I> The input type or, more specifically, the type of a single element in the underlying input stream.
+ * @param <I> The {@link Input} type or, more specifically, the type of a single element in the underlying {@link Input} stream.
  */
 public abstract class Parsing<I> {
 
@@ -175,7 +174,8 @@ public abstract class Parsing<I> {
     /**
      * Represents a {@link Result} which indicates a parse failure.
      * <br><br>
-     * Instead of the parsed value, a {@link Failure} only carries an error message that describes the failure in detail.
+     * Instead of the parsed value, a {@link Failure} only carries an {@link Expectation} that describes the
+     * {@link Failure} in detail and the {@link Input.Position} of the erroneous {@link Input} element.
      * Moreover, a {@link Failure} comes in two variants:
      * <ul>
      *     <li>{@link Error}: A recoverable kind of {@link Failure} that may trigger backtracking during parsing.</li>
@@ -188,6 +188,9 @@ public abstract class Parsing<I> {
      * @see Success
      * @see Error
      * @see Abort
+     * @see Expectation
+     * @see Parser#because(String) 
+     * @see Parser#expect(String)
      *
      * @author Björn Lötters
      *
@@ -195,18 +198,17 @@ public abstract class Parsing<I> {
      */
     public sealed abstract class Failure<T> extends Result<T> {
 
-        /** The error message that describes this {@link Failure} in more detail. */
-        public final String message;
-
+        /** An {@link Expectation} of this {@link Failure}, which describes what was expected and why. */
+        public final Expectation expectation;
 
         /**
          * The base constructor for a {@link Failure}.
-         * @param message The error message that describes this {@link Failure} in more detail.
+         * @param expectation The {@link Expectation} that describes what was expected and why.
          * @param rest The rest of the {@link Input}.
          */
-        public Failure(final String message, final Input<? extends I> rest) {
+        public Failure(final Expectation expectation, final Input<? extends I> rest) {
             super(rest);
-            this.message = message;
+            this.expectation = expectation;
         }
 
         @Override
@@ -216,7 +218,7 @@ public abstract class Parsing<I> {
 
         @Override
         public T getOrFail() throws NoSuchElementException {
-            throw new NoSuchElementException(message);
+            throw new NoSuchElementException();
         }
 
         @Override
@@ -250,19 +252,22 @@ public abstract class Parsing<I> {
             return failure;
         }
 
-        /**
-         * Format an error message for the provided {@link Input} and {@link Description}.
-         * @param input The related {@link Input} of the error message.
-         * @param description The {@link Description} of the {@link Parsing.Parser} that failed.
-         * @return A formatted error message that provides details about the location and kind of the error.
-         */
-        public static String format(final Input<?> input, final Description description) {
-            final Optional<String> expected = description.normalize().describe();
-            if (expected.isEmpty()) {
-                return String.format("syntax error in %s: unexpected %s", input.position(), input.position().describe());
-            } else {
-                return String.format("syntax error in %s: unexpected %s, expected %s", input.position(), input.position().describe(), expected.get());
+        public final String format() {
+            final StringBuilder message = new StringBuilder();
+            final Input<I>.Position position = rest.position();
+
+            message.append("syntax error in ");
+            message.append(position);
+            message.append(": unexpected ");
+            message.append(position.describe());
+
+            final String expectation = this.expectation.toString();
+            if (!expectation.isBlank()) {
+                message.append(", ");
+                message.append(expectation);
             }
+
+            return message.toString();
         }
 
     }
@@ -285,8 +290,8 @@ public abstract class Parsing<I> {
      */
     public final class Error<T> extends Failure<T> {
 
-        public Error(final String message, final Input<? extends I> rest) {
-            super(message, rest);
+        public Error(final Expectation expectation, final Input<? extends I> rest) {
+            super(expectation, rest);
         }
 
         @Override
@@ -314,8 +319,8 @@ public abstract class Parsing<I> {
      */
     public final class Abort<T> extends Failure<T> {
 
-        public Abort(final String message, final Input<? extends I> rest) {
-            super(message, rest);
+        public Abort(final Expectation expectation, final Input<? extends I> rest) {
+            super(expectation, rest);
         }
 
         @Override
@@ -354,16 +359,34 @@ public abstract class Parsing<I> {
         public abstract Result<T> apply(final Input<I> input);
 
         /**
-         * This method shall return a {@link Description} for this {@link Parser} which provides details about the shape
-         * of the {@link Input} this {@link Parser} expects. By default, this method returns an {@link Empty} {@link Description}
-         * and must hence be overwritten if required.
-         *
-         * @return A {@link Description} of this {@link Parser}.
-         *
-         * @see Description
+         * Equips this {@link Parser} with a description of its justification.
+         * This justification is meant to complete a sentence like {@code "this parser failed, because ..."}.
+         * There may only be one justification. Hence, calling this method twice overwrites the previous justification.
+         * Moreover, calling {@link #expect(String)} resets any justification.
+         * @param justification The description of the justification.
+         * @return A {@link Parser} that behaves just like this {@link Parser}, but which reports the provided
+         * justification in case of a {@link Failure}.
+         * @see #expect(String)
+         * @see Expectation
          */
-        public Description description() {
-            return new Empty();
+        public final Parser<T> because(final String justification) {
+            return new JustificationParser<>(this, justification);
+        }
+
+        /**
+         * Equips this {@link Parser} with a description of its expectation.
+         * This expectation is intended to be a noun phrase such as {@code "a literal"} or {@code "the literal 'abc'"},
+         * for example.
+         * Calling this method resets any previously set justification using {@link #because(String)} and overwrites
+         * prior expectations.
+         * @param expectation The description of the expectation.
+         * @return A {@link Parser} that behaves just like this {@link Parser}, but which reports the provided
+         * expectation in case of a {@link Failure}.
+         * @see #because(String)
+         * @see Expectation
+         */
+        public final Parser<T> expect(final String expectation) {
+            return new ExpectationParser<>(this, expectation);
         }
 
         /**
@@ -459,6 +482,20 @@ public abstract class Parsing<I> {
          */
         public final Parser<Optional<T>> optional() {
             return map(Optional::of).or(success(Optional::empty));
+        }
+
+        /**
+         * Creates a {@link Parser} which attempts to parse this {@link Parser} and only fails if this {@link Parser}
+         * aborts with an {@link Abort}.
+         * @return A {@link Parser} which optionally parses this {@link Parser}. If this {@link Parser} fails with an
+         * {@link Error}, the provided {@link Supplier<T>} is used to return a default value.
+         *
+         * @see Optional
+         * @see Optional#orElseGet(Supplier)
+         * @see #repeat
+         */
+        public final Parser<T> optional(final Supplier<T> otherwise) {
+            return optional().map(result -> result.orElseGet(otherwise));
         }
 
         /**
@@ -711,7 +748,7 @@ public abstract class Parsing<I> {
             if (result.rest.isEmpty()) {
                 return new Success<>(result.getOrFail(), result.rest);
             } else {
-                return new Error<>(Failure.format(result.rest, new Empty()), result.rest);
+                return new Error<>(Expectation.from("the end of input"), result.rest);
             }
         } else {
             return result;
@@ -742,22 +779,20 @@ public abstract class Parsing<I> {
 
     /**
      * Constructs a {@link Parser} that always fails with an {@link Error}.
-     * @param message The message of the {@link Error}.
      * @return A {@link Parser} that always fails with an {@link Error}.
      * @param <T> The mandatory type of the {@link Result}.
      */
-    public final <T> Parser<T> error(final String message) {
-        return lift(input -> new Error<>(message, input));
+    public final <T> Parser<T> error() {
+        return lift(input -> new Error<>(Expectation.unknown, input));
     }
 
     /**
      * Constructs a {@link Parser} that always fails with an {@link Abort}.
-     * @param message The message of the {@link Abort}.
      * @return A {@link Parser} that always fails with an {@link Abort}.
      * @param <T> The mandatory type of the {@link Result}.
      */
-    public final <T> Parser<T> abort(final String message) {
-        return lift(input -> new Abort<>(message, input));
+    public final <T> Parser<T> abort() {
+        return lift(input -> new Abort<>(Expectation.unknown, input));
     }
 
     /**
@@ -785,14 +820,14 @@ public abstract class Parsing<I> {
             public Result<T> apply(final Input<I> input) {
                 return switch (parser.apply(input.raw())) {
                     case Success<? extends T> success -> new Success<>(success.value, success.rest.withFilter(input));
-                    case Error<? extends T> error -> new Error<>(error.message, error.rest.withFilter(input));
-                    case Abort<? extends T> abort -> new Abort<>(abort.message, abort.rest.withFilter(input));
+                    case Failure<? extends T> failure -> {
+                        // In case of a failure, we do not reset the filter. This allows the failure to refer to the
+                        // exact position of the unexpected input.
+                        @SuppressWarnings("unchecked")
+                        final Failure<T> result = (Failure<T>) failure;
+                        yield result;
+                    }
                 };
-            }
-
-            @Override
-            public Description description() {
-                return parser.description();
             }
 
         };
@@ -807,7 +842,7 @@ public abstract class Parsing<I> {
      */
     @SafeVarargs
     public final <T> Parser<T> choice(final Parser<? extends T>... parsers) {
-        Parser<T> choice = error("empty choice");
+        Parser<T> choice = error();
 
         for (final Parser<? extends T> parser : parsers) {
             @SuppressWarnings("unchecked") // The type is assumed to be immutable and hence covariant
@@ -868,6 +903,50 @@ public abstract class Parsing<I> {
 
     /* *** Primitive Parser Implementations *** */
 
+    private final class ExpectationParser<T> extends Parser<T> {
+
+        private final Parser<T> parser;
+
+        private final Expectation expectation;
+
+        private ExpectationParser(final Parser<T> parser, final String expectation) {
+            this.parser = parser;
+            this.expectation = Expectation.from(expectation);
+        }
+
+        @Override
+        public Result<T> apply(final Input<I> input) {
+            return switch (this.parser.apply(input)) {
+                case Success<T> success -> success;
+                case Error<T> error -> new Error<>(expectation, error.rest);
+                case Abort<T> abort -> new Abort<>(expectation, abort.rest);
+            };
+        }
+
+    }
+
+    private final class JustificationParser<T> extends Parser<T> {
+
+        private final Parser<T> parser;
+
+        private final String justification;
+
+        private JustificationParser(final Parser<T> parser, final String justification) {
+            this.parser = parser;
+            this.justification = justification;
+        }
+
+        @Override
+        public Result<T> apply(final Input<I> input) {
+            return switch (this.parser.apply(input)) {
+                case Success<T> success -> success;
+                case Error<T> error -> new Error<>(error.expectation.because(justification), error.rest);
+                case Abort<T> abort -> new Abort<>(abort.expectation.because(justification), abort.rest);
+            };
+        }
+
+    }
+
     private final class MapParser<T, U> extends Parser<U> {
 
         private final Parser<T> parser;
@@ -877,11 +956,6 @@ public abstract class Parsing<I> {
         private MapParser(final Parser<T> parser, final Function<T, U> function) {
             this.parser = parser;
             this.function = function;
-        }
-
-        @Override
-        public Description description() {
-            return parser.description();
         }
 
         @Override
@@ -903,20 +977,9 @@ public abstract class Parsing<I> {
         }
 
         @Override
-        public Description description() {
-            return parser.description();
-        }
-
-        @Override
         public Result<U> apply(final Input<I> input) {
             return switch (parser.apply(input).map(function)) {
-                case Success<Parser<U>> success ->
-                    switch (success.value.apply(success.rest)) {
-                        case Success<U> result -> result;
-                        case Error<U> error -> new Error<>(error.message, input);
-                        case Abort<U> abort -> new Abort<>(abort.message, input);
-                    };
-
+                case Success<Parser<U>> success -> success.value.apply(success.rest);
                 case Failure<Parser<U>> failure -> {
                     @SuppressWarnings("unchecked")  // A failure does not carry a value of its type parameter
                     final Failure<U> result = (Failure<U>) failure;
@@ -939,20 +1002,28 @@ public abstract class Parsing<I> {
         }
 
         @Override
-        public Description description() {
-            return new Choice(List.of(first.description(), second.description()));
-        }
-
-        @Override
         public Result<T> apply(final Input<I> input) {
             return switch (first.apply(input)) {
                 case Success<T> success -> success;
                 case Abort<T> abort -> abort;
-                case Error<T> ignore -> switch (second.apply(input)) {
-                    case Success<T> success -> success;
-                    case Abort<T> abort -> abort;
-                    case Error<T> secondError -> new Error<>(Failure.format(secondError.rest, description()), input);
-                };
+                case Error<T> firstError ->
+                    switch (second.apply(input)) {
+                        case Success<T> success -> success;
+                        case Abort<T> abort -> abort;
+                        case Error<T> secondError -> {
+                            // We return the farthest failure or combine both expectations if the parsers failed at the same point.
+                            final int firstOffset = firstError.rest.position().offset;
+                            final int secondOffset = secondError.rest.position().offset;
+
+                            if (firstOffset > secondOffset) {
+                                yield firstError;
+                            } else if (secondOffset > firstOffset) {
+                                yield secondError;
+                            } else {
+                                yield new Error<>(firstError.expectation.merge(secondError.expectation), firstError.rest);
+                            }
+                        }
+                    };
             };
         }
 
@@ -979,11 +1050,6 @@ public abstract class Parsing<I> {
         }
 
         @Override
-        public Description description() {
-            return get().description();
-        }
-
-        @Override
         public Result<T> apply(final Input<I> input) {
             return get().apply(input);
         }
@@ -999,24 +1065,25 @@ public abstract class Parsing<I> {
         }
 
         @Override
-        public Description description() {
-            return parser.description();
-        }
-
-        @Override
         public Result<List<T>> apply(final Input<I> input) {
             final List<T> elements = new ArrayList<>();
+            Input<I> rest = input;
             Result<T> result = parser.apply(input);
 
             while (result.isSuccess()) {
                 elements.add(result.getOrFail());
+                rest = result.rest;
                 result = parser.apply(result.rest);
             }
 
             return switch (result) {
                 // We have to report this abort nevertheless
-                case Abort<T> abort -> new Abort<>(abort.message, abort.rest);
-                default -> new Success<>(Collections.unmodifiableList(elements), result.rest);
+                case Abort<T> abort -> {
+                    @SuppressWarnings("unchecked") // An Abort never contains elements of its type parameter.
+                    final Abort<List<T>> casted = (Abort<List<T>>) abort;
+                    yield casted;
+                }
+                default -> new Success<>(Collections.unmodifiableList(elements), rest);
             };
         }
 
@@ -1031,15 +1098,10 @@ public abstract class Parsing<I> {
         }
 
         @Override
-        public Description description() {
-            return parser.description();
-        }
-
-        @Override
         public Result<T> apply(final Input<I> input) {
             return switch (parser.apply(input)) {
                 case Success<T> success -> success;
-                case Error<T> error -> new Abort<>(error.message, error.rest);
+                case Error<T> error -> new Abort<>(error.expectation, error.rest);
                 case Abort<T> abort -> abort;
             };
         }
@@ -1055,15 +1117,10 @@ public abstract class Parsing<I> {
         }
 
         @Override
-        public Description description() {
-            return parser.description();
-        }
-
-        @Override
         public Result<Void> apply(final Input<I> input) {
             return switch(parser.apply(input)) {
                 case Success<?> ignore -> new Success<>(null, input);
-                case Failure<?> ignore -> new Error<>(Failure.format(input, description()), input);
+                case Failure<?> failure -> new Error<>(failure.expectation, failure.rest);
             };
         }
 
@@ -1078,14 +1135,9 @@ public abstract class Parsing<I> {
         }
 
         @Override
-        public Description description() {
-            return parser.description().negate();
-        }
-
-        @Override
         public Result<Void> apply(final Input<I> input) {
             return switch(parser.apply(input)) {
-                case Success<?> ignore -> new Error<>(Failure.format(input, description()), input);
+                case Success<?> ignore -> new Error<>(Expectation.unknown, input);
                 case Failure<?> ignore -> new Success<>(null, input);
             };
         }
@@ -1113,7 +1165,7 @@ public abstract class Parsing<I> {
                     yield success;
                 }
                 case Failure<T> failure -> {
-                    System.out.printf("failed to parse '%s': %s\n", name, failure.message);
+                    System.out.printf("failed to parse '%s': %s\n", name, failure.format());
                     yield failure;
                 }
             };

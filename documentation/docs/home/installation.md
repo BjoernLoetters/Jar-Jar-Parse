@@ -23,7 +23,7 @@ Add the following dependency to your `pom.xml`:
 <dependency>
     <groupId>io.github.bjoernloetters</groupId>
     <artifactId>jjparse-core</artifactId>
-    <version>1.2.6</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
@@ -37,7 +37,7 @@ You can always find the latest version on Maven Central or on the project's GitH
 
 ```kotlin
 dependencies {
-    implementation("io.github.bjoernloetters:jjparse-core:1.2.6")
+    implementation("io.github.bjoernloetters:jjparse-core:2.0.0")
 }
 ```
 
@@ -45,7 +45,7 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'io.github.bjoernloetters:jjparse-core:1.2.6'
+    implementation 'io.github.bjoernloetters:jjparse-core:2.0.0'
 }
 ```
 
@@ -58,13 +58,13 @@ Because JJParse is published to Maven Central, it can also be used with other JV
 ### SBT
 
 ```scala
-libraryDependencies += "io.github.bjoernloetters" % "jjparse-core" % "1.2.6"
+libraryDependencies += "io.github.bjoernloetters" % "jjparse-core" % "2.0.0"
 ```
 
 ### Ivy
 
 ```xml
-<dependency org="io.github.bjoernloetters" name="jjparse-core" rev="1.2.6"/>
+<dependency org="io.github.bjoernloetters" name="jjparse-core" rev="2.0.0"/>
 ```
 
 ---
@@ -86,26 +86,41 @@ If you prefer not to use a dependency manager, you can install JJParse manually:
 To verify that JJParse is on the classpath and working, create a small Java class:
 
 ```java
-import jjparse.StringParsing;
+import jjparse.TextParsing;
 import jjparse.input.Input;
 
-public class MyParser extends StringParsing {
-    
-    public Parser<Integer> number = regex("[0-9]+").map(Integer::parseInt);
- 
+// Extend 'TextParsing' for convenient parsing of Unicode text.
+public class MyParser extends TextParsing {
+
+    // A parser which parses a signed integer.
+    public Parser<Integer> number = regex("[+-]?[0-9]+").map(Integer::parseInt);
+
+    // A parser which parses additions and returns their result.
+    public Parser<Integer> add = number.andl(character('+')).and(number)
+            .map(product -> product.first() + product.second());
+
     public static void main(final String[] arguments) {
-        Input<Character> input = Input.of("Test Input", "42");
+        // Create an instance of our parsing context.
         MyParser parser = new MyParser();
-        Result<Integer> result = parser.parse(parser.number, input);
+
+        // Create an input of Unicode codepoints with the name 'My Test Input' (for error reporting).
+        // Additionally, skip any kind of Unicode whitespace. 
+        Input<Integer> input = Input.of("My Test Input", "42 + 0").withFilter(parser.whitespace);
+
+        // Use the 'add' parser to parse the above input.
+        Result<Integer> result = parser.parse(parser.add, input);
+
+        // The following statement prints 'Success: 42'.
         switch (result) {
             case Success<Integer> success:
                 System.out.printf("Success: %s\n", success.value);
                 break;
             case Failure<Integer> failure:
-                System.err.printf("Failure: %s\n", failure.message);
+                System.err.printf("Failure: %s\n", failure.format());
                 break;
         }
     }
+
 }
 ```
 

@@ -7,7 +7,7 @@ import java.util.List;
 
 public final class RepeatTest extends ParserTest {
 
-    private final Parser<Character> charParser = regex("[a-z]").map(s -> s.charAt(0));
+    private final Parser<Character> charParser = lowercase;
     private final Parser<List<Character>> repeatParser = charParser.repeat();
 
     @Test
@@ -38,7 +38,7 @@ public final class RepeatTest extends ParserTest {
 
     @Test
     public void repeatAbortTest() {
-        assertFailure(charParser.commit().repeat(), "syntax error in Test 'repeatAbortTest' at line 1 and column 1: unexpected character '1', expected an input that matches '[a-z]'", "123");
+        assertFailure(charParser.commit().repeat(), "syntax error in Test 'repeatAbortTest' at line 1 and column 1: unexpected token '1', expected a Latin lowercase letter", "123");
     }
 
 }

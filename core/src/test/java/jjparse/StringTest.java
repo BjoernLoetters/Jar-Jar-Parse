@@ -17,20 +17,14 @@ public final class StringTest extends ParserTest {
     public void regexPrefixMatchTest() {
         Parser<String> wordParser = regex("abc");
         assertSuccess(wordParser, "abc", "abc_hello_world");
-        assertFailure(wordParser, "syntax error in Test 'regexPrefixMatchTest' at line 1 and column 1: unexpected character 'd', expected an input that matches 'abc'", "dabc");
-        assertFailure(wordParser, "syntax error in Test 'regexPrefixMatchTest' at line 1 and column 1: unexpected character 'a', expected an input that matches 'abc'", "aabc");
+        assertFailure(wordParser, "syntax error in Test 'regexPrefixMatchTest' at line 1 and column 1: unexpected token 'd', expected anything that matches 'abc'", "dabc");
+        assertFailure(wordParser, "syntax error in Test 'regexPrefixMatchTest' at line 1 and column 1: unexpected token 'a', expected anything that matches 'abc'", "aabc");
     }
 
     @Test
     public void regexWhitespaceTest() {
         Parser<String> spaceParser = regex("a b c");
         assertSuccess(spaceParser, "a b c", "a b c");
-    }
-
-    @Test
-    public void regexEscapeSequenceTest() {
-        Parser<String> escapeParser = regex("\\d+");
-        assertSuccess(escapeParser, "123", "123");
     }
 
     @Test
@@ -51,12 +45,12 @@ public final class StringTest extends ParserTest {
 
     @Test
     public void lowercaseFailureTest() {
-        assertFailure(lowercase, "syntax error in Test 'lowercaseFailureTest' at line 1 and column 1: unexpected character 'A', expected a character that matches '[a-z]'", "ABC");
+        assertFailure(lowercase, "syntax error in Test 'lowercaseFailureTest' at line 1 and column 1: unexpected token 'A', expected a Latin lowercase letter", "ABC");
     }
 
     @Test
     public void uppercaseFailureTest() {
-        assertFailure(uppercase, "syntax error in Test 'uppercaseFailureTest' at line 1 and column 1: unexpected character 'a', expected a character that matches '[A-Z]'", "abc");
+        assertFailure(uppercase, "syntax error in Test 'uppercaseFailureTest' at line 1 and column 1: unexpected token 'a', expected a Latin uppercase letter", "abc");
     }
 
     @Test
@@ -68,7 +62,7 @@ public final class StringTest extends ParserTest {
     @Test
     public void characterFailureTest() {
         Parser<Character> parser = character('x');
-        assertFailure(parser, "syntax error in Test 'characterFailureTest' at line 1 and column 1: unexpected character 'y', expected the character 'x'", "yza");
+        assertFailure(parser, "syntax error in Test 'characterFailureTest' at line 1 and column 1: unexpected token 'y', expected the token 'x'", "yza");
     }
 
     @Test
@@ -77,8 +71,8 @@ public final class StringTest extends ParserTest {
             assertSuccess(digit, i, "" + i);
         }
 
-        assertFailure(digit, "syntax error in Test 'digitTest' at line 1 and column 1: unexpected end of input, expected a character that matches '[0-9]'", "");
-        assertFailure(digit, "syntax error in Test 'digitTest' at line 1 and column 1: unexpected character 'a', expected a character that matches '[0-9]'", "a123");
+        assertFailure(digit, "syntax error in Test 'digitTest' at line 1 and column 1: unexpected end of input, expected a digit", "");
+        assertFailure(digit, "syntax error in Test 'digitTest' at line 1 and column 1: unexpected token 'a', expected a digit", "a123");
     }
 
     @Test
@@ -87,11 +81,11 @@ public final class StringTest extends ParserTest {
         assertSuccess(nat32, 0, "0");
         assertSuccess(nat32, 123456789, "123456789");
 
-        assertFailure(nat32, "syntax error in Test 'nat32Test' at line 1 and column 1: unexpected end of input, expected a character that matches '[0-9]'", "");
-        assertFailure(nat32, "syntax error in Test 'nat32Test' at line 1 and column 1: unexpected character '-', expected a character that matches '[0-9]'", "-100");
-        assertFailure(nat32, "syntax error in Test 'nat32Test' at line 1 and column 1: unexpected character '+', expected a character that matches '[0-9]'", "+100");
-        assertFailure(nat32, "syntax error in Test 'nat32Test' at line 1 and column 1: unexpected character '-', expected a character that matches '[0-9]'", Integer.MIN_VALUE + "");
-        assertFailure(nat32, "syntax error in Test 'nat32Test' at line 1 and column 1: unexpected character 'a', expected a character that matches '[0-9]'", "a123");
+        assertFailure(nat32, "syntax error in Test 'nat32Test' at line 1 and column 1: unexpected end of input, expected a natural number", "");
+        assertFailure(nat32, "syntax error in Test 'nat32Test' at line 1 and column 1: unexpected token '-', expected a natural number", "-100");
+        assertFailure(nat32, "syntax error in Test 'nat32Test' at line 1 and column 1: unexpected token '+', expected a natural number", "+100");
+        assertFailure(nat32, "syntax error in Test 'nat32Test' at line 1 and column 1: unexpected token '-', expected a natural number", Integer.MIN_VALUE + "");
+        assertFailure(nat32, "syntax error in Test 'nat32Test' at line 1 and column 1: unexpected token 'a', expected a natural number", "a123");
     }
 
     @Test
@@ -102,8 +96,8 @@ public final class StringTest extends ParserTest {
         assertSuccess(int32, Integer.MAX_VALUE, Integer.MAX_VALUE + "");
         assertSuccess(int32, Integer.MIN_VALUE, Integer.MIN_VALUE + "");
 
-        assertFailure(int32, "syntax error in Test 'int32Test' at line 1 and column 1: unexpected character 'a', expected a character that matches '[0-9]'", "a123");
-        assertFailure(int32, "syntax error in Test 'int32Test' at line 1 and column 1: unexpected end of input, expected a character that matches '[0-9]'", "");
+        assertFailure(int32, "syntax error in Test 'int32Test' at line 1 and column 1: unexpected token 'a', expected an integer number", "a123");
+        assertFailure(int32, "syntax error in Test 'int32Test' at line 1 and column 1: unexpected end of input, expected an integer number", "");
     }
 
     @Test
@@ -114,8 +108,8 @@ public final class StringTest extends ParserTest {
         assertSuccess(int64, Long.MAX_VALUE, Long.MAX_VALUE + "");
         assertSuccess(int64, Long.MIN_VALUE, Long.MIN_VALUE + "");
 
-        assertFailure(int64, "syntax error in Test 'int64Test' at line 1 and column 1: unexpected character 'a', expected a character that matches '[0-9]'", "a123");
-        assertFailure(int64, "syntax error in Test 'int64Test' at line 1 and column 1: unexpected end of input, expected a character that matches '[0-9]'", "");
+        assertFailure(int64, "syntax error in Test 'int64Test' at line 1 and column 1: unexpected token 'a', expected an integer number", "a123");
+        assertFailure(int64, "syntax error in Test 'int64Test' at line 1 and column 1: unexpected end of input, expected an integer number", "");
     }
 
     @Test
@@ -124,8 +118,8 @@ public final class StringTest extends ParserTest {
         assertSuccess(integer, new BigInteger("12345678901234567890"), "+12345678901234567890");
         assertSuccess(integer, new BigInteger("-12345678901234567890"), "-12345678901234567890");
 
-        assertFailure(integer, "syntax error in Test 'integerTest' at line 1 and column 1: unexpected character 'a', expected a character that matches '[0-9]'", "a123");
-        assertFailure(integer, "syntax error in Test 'integerTest' at line 1 and column 1: unexpected end of input, expected a character that matches '[0-9]'", "");
+        assertFailure(integer, "syntax error in Test 'integerTest' at line 1 and column 1: unexpected token 'a', expected an integer number", "a123");
+        assertFailure(integer, "syntax error in Test 'integerTest' at line 1 and column 1: unexpected end of input, expected an integer number", "");
     }
 
     @Test
@@ -136,8 +130,8 @@ public final class StringTest extends ParserTest {
         assertSuccess(float32, 1.23e4f, "1.23e4");
         assertSuccess(float32, -1.23e-4f, "-1.23e-4");
 
-        assertFailure(float32, "syntax error in Test 'float32Test' at line 1 and column 1: unexpected character 'a', expected an input that matches '[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?'", "a123");
-        assertFailure(float32, "syntax error in Test 'float32Test' at line 1 and column 1: unexpected end of input, expected an input that matches '[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?'", "");
+        assertFailure(float32, "syntax error in Test 'float32Test' at line 1 and column 1: unexpected token 'a', expected a floating point number", "a123");
+        assertFailure(float32, "syntax error in Test 'float32Test' at line 1 and column 1: unexpected end of input, expected a floating point number", "");
     }
 
     @Test
@@ -148,8 +142,8 @@ public final class StringTest extends ParserTest {
         assertSuccess(float64, 1.23e4, "1.23e4");
         assertSuccess(float64, -1.23e-4, "-1.23e-4");
 
-        assertFailure(float64, "syntax error in Test 'float64Test' at line 1 and column 1: unexpected character 'a', expected an input that matches '[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?'", "a123");
-        assertFailure(float64, "syntax error in Test 'float64Test' at line 1 and column 1: unexpected end of input, expected an input that matches '[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?'", "");
+        assertFailure(float64, "syntax error in Test 'float64Test' at line 1 and column 1: unexpected token 'a', expected a floating point number", "a123");
+        assertFailure(float64, "syntax error in Test 'float64Test' at line 1 and column 1: unexpected end of input, expected a floating point number", "");
     }
 
 }

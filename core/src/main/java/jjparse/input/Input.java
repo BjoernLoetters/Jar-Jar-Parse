@@ -12,19 +12,18 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Spliterator;
-import java.util.logging.Filter;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
- * An abstract representation of an {@link Input} for parsing. In most cases, this will be a {@link CharacterInput}, which
+ * An abstract representation of an {@link Input} for parsing. In most cases, this will be a {@link CodepointInput}, which
  * is an {@link Input} of {@link Character}s and can be considered a sequence of characters (just like a {@link String}).
  * <br/><br/>
  * <b>Note</b>: This class is intended to be immutable and hence covariant in its type parameter.
  * @param <I> The covariant element type for this {@link Input}. In most cases this type equals {@link Character}.
  *
  * @see Parser
- * @see CharacterInput
+ * @see CodepointInput
  * @see SpliteratorInput
  *
  * @author Björn Lötters
@@ -123,7 +122,7 @@ public abstract class Input<I> {
      * Represents an offset within this {@link Input}. Since the unit of this offset depends on the element type of
      * this {@link Input}, this class depends on the specific {@link Input} instance. Also note, that this offset may
      * not reflect the {@link Position} as it is perceived by the user. This is, for example, the case for {@link Input}s
-     * of {@link Character}s, where up to two {@link Character}s may form a single unicode code point. It is up to the
+     * of {@link Character}s, where up to two {@link Character}s may form a single Unicode codepoint. It is up to the
      * implementation of the respective {@link Input} to interpret this offset accordingly.
      *
      * @see Input
@@ -229,58 +228,59 @@ public abstract class Input<I> {
     }
 
     /**
-     * Constructs a new {@link Input} of {@link Character}s on basis of the provided {@link InputStream} and {@link Charset}.
+     * Constructs a new {@link Input} of Unicode codepoints on basis of the provided {@link InputStream} and {@link Charset}.
      * Take note that the provided {@link InputStream} is completely read before the {@link Input} is created. For a lazy
      * kind of input, consider one of the other variants of this method.
      * @param name A human-readable name for the {@link Input}.
      * @param stream The underlying source for this {@link Input}.
      * @param charset The {@link Charset} that shall be used to decode the {@link InputStream}.
-     * @return An {@link Input} of {@link Character}s that is based on the underlying {@link InputStream}.
+     * @return An {@link Input} of Unicode codepoints that is based on the underlying {@link InputStream}.
      * @throws IOException If reading from the {@link InputStream} fails.
      */
-    public static Input<Character> of(final String name, final InputStream stream, final Charset charset) throws IOException {
+    public static Input<Integer> of(final String name, final InputStream stream, final Charset charset) throws IOException {
         final byte[] bytes = stream.readAllBytes();
         return of(name, bytes, charset);
     }
 
     /**
-     * Constructs a new {@link Input} of {@link Character}s on basis of the provided file {@link Path} and {@link Charset}.
+     * Constructs a new {@link Input} of Unicode codepoints on basis of the provided file {@link Path} and {@link Charset}.
      * @param path The {@link Path} to the file that should be read as the source of this input. At the same time, this path is
      *             used as the name for the {@link Input}.
      * @param charset The {@link Charset} that shall be used to decode the file denoted by the provided {@link Path}.
-     * @return An {@link Input} of {@link Character}s that is based on the underlying file contents.
+     * @return An {@link Input} of Unicode codepoints that is based on the underlying file contents.
      * @throws IOException If reading the file contents denoted by the {@link Path} fails.
      */
-    public static Input<Character> of(final Path path, final Charset charset) throws IOException {
+    public static Input<Integer> of(final Path path, final Charset charset) throws IOException {
         final byte[] bytes = Files.readAllBytes(path);
         return of(String.format("file '%s'", path), bytes, charset);
     }
 
     /**
-     * Constructs a new {@link Input} of {@link Character}s on basis of the provided {@link Byte} array and {@link Charset}.
+     * Constructs a new {@link Input} of Unicode codepoints on basis of the provided {@link Byte} array and {@link Charset}.
      * @param name A human-readable name for the {@link Input}.
      * @param bytes The underlying source for this {@link Input}.
      * @param charset The {@link Charset} that shall be used to decode the {@link Byte} array.
-     * @return An {@link Input} of {@link Character}s that is based on the underlying {@link Byte} array.
+     * @return An {@link Input} of Unicode codepoints that is based on the underlying {@link Byte} array.
      */
-    public static Input<Character> of(final String name, final byte[] bytes, final Charset charset) {
+    public static Input<Integer> of(final String name, final byte[] bytes, final Charset charset) {
         final String contents = new String(bytes, charset);
         return of(name, contents);
     }
 
     /**
-     * Constructs a new {@link Input} of {@link Character}s on basis of the provided {@link CharSequence}.
+     * Constructs a new {@link Input} of Unicode codepoints on basis of the provided {@link CharSequence}.
      * @param name A human-readable name for the {@link Input}.
      * @param sequence The underlying source for this {@link Input}.
-     * @return An {@link Input} of {@link Character}s that is based on the underlying {@link CharSequence}.
+     * @return An {@link Input} of Unicode codepoints that is based on the underlying {@link CharSequence}.
      */
-    public static Input<Character> of(final String name, final CharSequence sequence) {
+    public static Input<Integer> of(final String name, final CharSequence sequence) {
+        final int[] codepoints = sequence.codePoints().toArray();
         final int[] lines = IntStream.concat(
             IntStream.of(0), // The offset of the first line is always 0
-            IntStream.range(1, sequence.length() + 1).filter(index -> sequence.charAt(index - 1) == '\n')
+            IntStream.range(1, codepoints.length + 1).filter(index -> codepoints[index - 1] == '\n')
         ).toArray();
 
-        return new CharacterInput(name, sequence, 0, sequence.length(), lines);
+        return new CodepointInput(name, codepoints, 0, codepoints.length, lines);
     }
 
 }

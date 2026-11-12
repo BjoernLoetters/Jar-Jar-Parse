@@ -14,7 +14,7 @@ public final class LiteralTest extends ParserTest {
 
     @Test
     public void literalFailureUnexpectedCharacterTest() {
-        assertFailure(parser, "syntax error in Test 'literalFailureUnexpectedCharacterTest' at line 1 and column 1: unexpected character 'w', expected the literal 'hello'", "world");
+        assertFailure(parser, "syntax error in Test 'literalFailureUnexpectedCharacterTest' at line 1 and column 1: unexpected token 'w', expected the literal 'hello'", "world");
     }
 
     @Test
@@ -24,7 +24,7 @@ public final class LiteralTest extends ParserTest {
 
     @Test
     public void literalPartialMatchFailureTest() {
-        assertFailure(parser, "syntax error in Test 'literalPartialMatchFailureTest' at line 1 and column 4: unexpected character ' ', expected the literal 'hello'", "hel world");
+        assertFailure(parser, "syntax error in Test 'literalPartialMatchFailureTest' at line 1 and column 4: unexpected token ' ', expected the literal 'hello'", "hel world");
     }
 
     @Test
@@ -34,7 +34,7 @@ public final class LiteralTest extends ParserTest {
 
     @Test
     public void literalCaseSensitiveTest() {
-        assertFailure(parser, "syntax error in Test 'literalCaseSensitiveTest' at line 1 and column 1: unexpected character 'H', expected the literal 'hello'", "Hello");
+        assertFailure(parser, "syntax error in Test 'literalCaseSensitiveTest' at line 1 and column 1: unexpected token 'H', expected the literal 'hello'", "Hello");
     }
 
     @Test
@@ -43,7 +43,7 @@ public final class LiteralTest extends ParserTest {
         final Parser<String> unicodeParser = literal(unicodeLiteral);
 
         assertSuccess(unicodeParser, "😀", "😀");
-        assertFailure(unicodeParser, "syntax error in Test 'literalUnicodeTest' at line 1 and column 1: unexpected character '🙂', expected the literal '😀'", "🙂");
+        assertFailure(unicodeParser, "syntax error in Test 'literalUnicodeTest' at line 1 and column 1: unexpected token '🙂', expected the literal '😀'", "🙂");
         assertFailure(unicodeParser, "syntax error in Test 'literalUnicodeTest' at line 1 and column 1: unexpected end of input, expected the literal '😀'", "");
     }
 

@@ -29,7 +29,7 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void repeat1FailureNoMatchTest() {
         Parser<List<Character>> parser = character('a').repeat1();
-        assertFailure(parser, "syntax error in Test 'repeat1FailureNoMatchTest' at line 1 and column 1: unexpected character 'b', expected the character 'a'", "b");
+        assertFailure(parser, "syntax error in Test 'repeat1FailureNoMatchTest' at line 1 and column 1: unexpected token 'b', expected the token 'a'", "b");
     }
 
     @Test
@@ -41,7 +41,7 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void repeat1EmptyInputTest() {
         Parser<List<Character>> parser = character('a').repeat1();
-        assertFailure(parser, "syntax error in Test 'repeat1EmptyInputTest' at line 1 and column 1: unexpected end of input, expected the character 'a'", "");
+        assertFailure(parser, "syntax error in Test 'repeat1EmptyInputTest' at line 1 and column 1: unexpected end of input, expected the token 'a'", "");
     }
 
     @Test
@@ -59,7 +59,7 @@ public final class CombinatorTest extends ParserTest {
         Parser<Character> second = character('b');
         Parser<Character> parser = first.andr(second);
 
-        assertFailure(parser, "syntax error in Test 'andrFailureTest' at line 1 and column 2: unexpected character 'c', expected the character 'b'", "ac");
+        assertFailure(parser, "syntax error in Test 'andrFailureTest' at line 1 and column 2: unexpected token 'c', expected the token 'b'", "ac");
     }
 
     @Test
@@ -77,7 +77,7 @@ public final class CombinatorTest extends ParserTest {
         Parser<Character> second = character('b');
         Parser<Character> parser = first.andl(second);
 
-        assertFailure(parser, "syntax error in Test 'andlFailureTest' at line 1 and column 2: unexpected character 'c', expected the character 'b'", "ac");
+        assertFailure(parser, "syntax error in Test 'andlFailureTest' at line 1 and column 2: unexpected token 'c', expected the token 'b'", "ac");
     }
 
     @Test
@@ -95,7 +95,7 @@ public final class CombinatorTest extends ParserTest {
         Parser<Character> second = character('b');
         Parser<Product<Character, Character>> parser = first.and(second);
 
-        assertFailure(parser, "syntax error in Test 'andFailureTest' at line 1 and column 2: unexpected character 'c', expected the character 'b'", "ac");
+        assertFailure(parser, "syntax error in Test 'andFailureTest' at line 1 and column 2: unexpected token 'c', expected the token 'b'", "ac");
     }
 
     @Test
@@ -106,8 +106,8 @@ public final class CombinatorTest extends ParserTest {
 
     @Test
     public void notFailureTest() {
-        final Parser<Void> parser = character('a').not();
-        assertFailure(parser, "syntax error in Test 'notFailureTest' at line 1 and column 1: unexpected character 'a', expected anything but the character 'a'", "a");
+        final Parser<Void> parser = character('a').not().expect("anything but the token 'a'");
+        assertFailure(parser, "syntax error in Test 'notFailureTest' at line 1 and column 1: unexpected token 'a', expected anything but the token 'a'", "a");
     }
 
     @Test
@@ -119,7 +119,7 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void guardFailureTest() {
         final Parser<String> parser = character('a').guard().andr(regex(".+"));
-        assertFailure(parser, "syntax error in Test 'guardFailureTest' at line 1 and column 1: unexpected character 'b', expected the character 'a'", "bcd");
+        assertFailure(parser, "syntax error in Test 'guardFailureTest' at line 1 and column 1: unexpected token 'b', expected the token 'a'", "bcd");
     }
 
     @Test
@@ -168,8 +168,8 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void separate1FailureTest() {
         final Parser<List<Character>> parser = character('a').separate1(character(','));
-        assertFailure(parser, "syntax error in Test 'separate1FailureTest' at line 1 and column 1: unexpected end of input, expected the character 'a'", "");
-        assertFailure(parser, "syntax error in Test 'separate1FailureTest' at line 1 and column 1: unexpected character 'b', expected the character 'a'", "b");
+        assertFailure(parser, "syntax error in Test 'separate1FailureTest' at line 1 and column 1: unexpected end of input, expected the token 'a'", "");
+        assertFailure(parser, "syntax error in Test 'separate1FailureTest' at line 1 and column 1: unexpected token 'b', expected the token 'a'", "b");
     }
 
     @Test
@@ -234,14 +234,14 @@ public final class CombinatorTest extends ParserTest {
 
     @Test
     public void errorParserTest() {
-        final Parser<String> parser = error("error");
-        assertFailure(parser, "error", "anything");
+        final Parser<String> parser = error();
+        assertFailure(parser, "syntax error in Test 'errorParserTest' at line 1 and column 1: unexpected token 'a'", "anything");
     }
 
     @Test
     public void abortParserTest() {
-        Parser<String> parser = abort("abort");
-        assertFailure(parser, "abort", "anything");
+        Parser<String> parser = abort();
+        assertFailure(parser, "syntax error in Test 'abortParserTest' at line 1 and column 1: unexpected token 'a'", "anything");
     }
 
     @Test
@@ -253,7 +253,7 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void commitFailureTest() {
         Parser<Character> parser = character('a').commit();
-        assertFailure(parser, "syntax error in Test 'commitFailureTest' at line 1 and column 1: unexpected character 'b', expected the character 'a'", "b");
+        assertFailure(parser, "syntax error in Test 'commitFailureTest' at line 1 and column 1: unexpected token 'b', expected the token 'a'", "b");
     }
 
     @Test
@@ -265,15 +265,15 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void commitChoiceNoBacktrackingTest() {
         Parser<Character> parser = character('a').commit().or(character('b'));
-        assertFailure(parser, "syntax error in Test 'commitChoiceNoBacktrackingTest' at line 1 and column 1: unexpected character 'b', expected the character 'a'", "b");
+        assertFailure(parser, "syntax error in Test 'commitChoiceNoBacktrackingTest' at line 1 and column 1: unexpected token 'b', expected the token 'a'", "b");
     }
 
     @Test
     public void positionParserCorrectPositionTest() {
         final String contents = "line1 column1\n line2\n    column3  line3\n";
-        final Input<Character> input = Input.of("Test '" + getTestName() + "'", contents).withFilter(whitespace);
+        final Input<Integer> input = Input.of("Test '" + getTestName() + "'", contents).withFilter(whitespace);
 
-        final Parser<Function<Input<Character>.Position, String>> parser = regex("line[0-9]|column[0-9]").map(ignore -> position -> position.toString());
+        final Parser<Function<Input<Integer>.Position, String>> parser = regex("line[0-9]|column[0-9]").map(ignore -> Input.Position::toString);
 
         final Parser<String> positionParser = position(parser);
         final Result<String> firstResult = positionParser.apply(input);
@@ -301,9 +301,9 @@ public final class CombinatorTest extends ParserTest {
     @Test
     public void positionParserCorrectCodePointPositionTest() {
         final String contents = "😀🙂\n  🙂😀";
-        final Input<Character> input = Input.of("Test '" + getTestName() + "'", contents).withFilter(whitespace);
+        final Input<Integer> input = Input.of("Test '" + getTestName() + "'", contents).withFilter(whitespace);
 
-        final Parser<Function<Input<Character>.Position, String>> parser = regex("😀|🙂").map(ignore -> position -> position.toString());
+        final Parser<Function<Input<Integer>.Position, String>> parser = regex("😀|🙂").map(ignore -> Input.Position::toString);
 
         final Parser<String> positionParser = position(parser);
         final Result<String> firstResult = positionParser.apply(input);

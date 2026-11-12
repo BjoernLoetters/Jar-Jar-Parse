@@ -5,7 +5,7 @@ import jjparse.Parsing;
 import java.util.NoSuchElementException;
 
 /**
- * A decorator that wraps an {@link Input} with a {@link Parsing.Parser} which filters out irrelevant input tokens.
+ * A decorator that wraps an {@link Input} with a {@link Parsing.Parser} that filters out irrelevant input tokens.
  * Such a {@link FilteredInput} contains the same input tokens as the underlying {@link Input} except for those skipped
  * by the provided {@link Parsing.Parser}.
  * {@link Position}s returned by this {@link Input} correspond to the ones of the underlying {@link Input}.
