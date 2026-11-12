@@ -35,9 +35,9 @@ jobs:
       - name: Build Javadoc with Maven
         run: mvn -B -pl core javadoc:javadoc -DskipTests -Dgpg.skip=true
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
-          python-version: 3.9
+          python-version: '3.13'
 
       - name: Install MkDocs
         run: |
